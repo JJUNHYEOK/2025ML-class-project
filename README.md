@@ -87,19 +87,6 @@ Python 기반 컴퓨터 비전과 최적화 알고리즘을 활용한 실시간 
     - 결과를 Qt Signal/Slot 으로 화면 갱신
 
 
-5. 모듈 간 통신·오케스트레이션
-
-- **메시지 큐 (ZeroMQ / Redis Pub/Sub)**
-    - Frame Grabber → Inference → Postprocessing
-    - 비동기 처리로 병목 최소화
-- **공유 데이터 스토어**
-    - 최신 결과 캐시(Redis)
-    - 로그·통계 저장(PostgreSQL / SQLite)
-- **스케줄러**
-    - 작업 스레드 관리
-    - 주기적 리소스 상태 체크 (GPU 메모리 등)
-
-
 ## **📌 주요 기능**
 - 산불 감지
 - 산불 예측
