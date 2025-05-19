@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html>
+<head>
+    
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    
+        <script>
+            L_NO_TOUCH = false;
+            L_DISABLE_3D = false;
+        </script>
+    
+    <style>html, body {width: 100%;height: 100%;margin: 0;padding: 0;}</style>
+    <style>#map {position:absolute;top:0;bottom:0;right:0;left:0;}</style>
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap-glyphicons.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.2.0/css/all.min.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/python-visualization/folium/folium/templates/leaflet.awesome.rotate.min.css"/>
+    
+            <meta name="viewport" content="width=device-width,
+                initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+            <style>
+                #map_c1218c228cce94a4abc02e7da8000ee3 {
+                    position: relative;
+                    width: 100.0%;
+                    height: 100.0%;
+                    left: 0.0%;
+                    top: 0.0%;
+                }
+                .leaflet-container { font-size: 1rem; }
+            </style>
+        
+    <script src="https://cdn.jsdelivr.net/npm/leaflet-textpath@1.2.3/leaflet.textpath.min.js"></script>
+</head>
+<body>
+    
+    
+            <div class="folium-map" id="map_c1218c228cce94a4abc02e7da8000ee3" ></div>
+        
+</body>
+<script>
+    
+    
+            var map_c1218c228cce94a4abc02e7da8000ee3 = L.map(
+                "map_c1218c228cce94a4abc02e7da8000ee3",
+                {
+                    center: [35.18035823746264, 128.11851962302458],
+                    crs: L.CRS.EPSG3857,
+                    ...{
+  "zoom": 10,
+  "zoomControl": true,
+  "preferCanvas": false,
+}
+
+                }
+            );
+
+            
+
+        
+    
+            var tile_layer_f28979af84f6b546871fac01ed906e34 = L.tileLayer(
+                "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+                {
+  "minZoom": 0,
+  "maxZoom": 19,
+  "maxNativeZoom": 19,
+  "noWrap": false,
+  "attribution": "\u0026copy; \u003ca href=\"https://www.openstreetmap.org/copyright\"\u003eOpenStreetMap\u003c/a\u003e contributors",
+  "subdomains": "abc",
+  "detectRetina": false,
+  "tms": false,
+  "opacity": 1,
+}
+
+            );
+        
+    
+            tile_layer_f28979af84f6b546871fac01ed906e34.addTo(map_c1218c228cce94a4abc02e7da8000ee3);
+        
+    
+            var circle_1420a2068be21d8bec4763870d1f5815 = L.circle(
+                [35.18035823746264, 128.11851962302458],
+                {"bubblingMouseEvents": true, "color": "blue", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "blue", "fillOpacity": 0.3, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 200, "stroke": true, "weight": 3}
+            ).addTo(map_c1218c228cce94a4abc02e7da8000ee3);
+        
+    
+        var popup_ae68f45209336e82737261d412d4d26d = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_8d4963234f9c2d339111bfca539c5dbf = $(`<div id="html_8d4963234f9c2d339111bfca539c5dbf" style="width: 100.0%; height: 100.0%;">기준 소방서<br>위치: (35.180358, 128.118520)</div>`)[0];
+                popup_ae68f45209336e82737261d412d4d26d.setContent(html_8d4963234f9c2d339111bfca539c5dbf);
+            
+        
+
+        circle_1420a2068be21d8bec4763870d1f5815.bindPopup(popup_ae68f45209336e82737261d412d4d26d)
+        ;
+
+        
+    
+    
+            var circle_7972071b69dbc84cc846cb0b3199b30e = L.circle(
+                [35.12706373982207, 128.17357412851203],
+                {"bubblingMouseEvents": true, "color": "red", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "red", "fillOpacity": 0.3, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 300, "stroke": true, "weight": 3}
+            ).addTo(map_c1218c228cce94a4abc02e7da8000ee3);
+        
+    
+        var popup_ebf8a2106114b842e8fb06c272360260 = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_3aa55a10c3ac70a157ec7a634b9917ee = $(`<div id="html_3aa55a10c3ac70a157ec7a634b9917ee" style="width: 100.0%; height: 100.0%;">                 <b>자원 정보</b><br>                 유형: truck<br>                 종류: FT1<br>                 수량: 1대<br>                 위치: (35.127064, 128.173574)<br>                 거리: 9.0km<br>                 화재 위험도 순위: 0             </div>`)[0];
+                popup_ebf8a2106114b842e8fb06c272360260.setContent(html_3aa55a10c3ac70a157ec7a634b9917ee);
+            
+        
+
+        circle_7972071b69dbc84cc846cb0b3199b30e.bindPopup(popup_ebf8a2106114b842e8fb06c272360260)
+        ;
+
+        
+    
+    
+            var poly_line_c8dad2bfb06d95b01fa32c5f5609e712 = L.polyline(
+                [[35.18035823746264, 128.11851962302458], [35.12706373982207, 128.17357412851203]],
+                {"bubblingMouseEvents": true, "color": "black", "dashArray": null, "dashOffset": null, "fill": false, "fillColor": "black", "fillOpacity": 0.2, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "noClip": false, "opacity": 0.8, "smoothFactor": 1.0, "stroke": true, "weight": 2}
+            ).addTo(map_c1218c228cce94a4abc02e7da8000ee3);
+        
+    
+            poly_line_c8dad2bfb06d95b01fa32c5f5609e712.setText(
+                "\u2192 9.0km",
+                {
+  "repeat": false,
+  "center": false,
+  "below": false,
+  "offset": "50%",
+  "orientation": 0,
+  "attributes": {
+  "fill": "red",
+  "font-weight": "bold",
+  "font-size": "14",
+  "stroke": "white",
+  "stroke-width": "3",
+  "paint-order": "stroke",
+},
+}
+            );
+        
+    
+            var circle_93a2b4d53cbe9567d5d94f34775d0845 = L.circle(
+                [35.20996249633627, 128.07320719979842],
+                {"bubblingMouseEvents": true, "color": "red", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "red", "fillOpacity": 0.3, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 150, "stroke": true, "weight": 3}
+            ).addTo(map_c1218c228cce94a4abc02e7da8000ee3);
+        
+    
+        var popup_7aade96c7c3bcfc9d81979bb1146f1cb = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_10b1fee78c007e394cde72a420e4c989 = $(`<div id="html_10b1fee78c007e394cde72a420e4c989" style="width: 100.0%; height: 100.0%;">                 <b>자원 정보</b><br>                 유형: truck<br>                 종류: FT2<br>                 수량: 1대<br>                 위치: (35.209962, 128.073207)<br>                 거리: 5.7km<br>                 화재 위험도 순위: 1             </div>`)[0];
+                popup_7aade96c7c3bcfc9d81979bb1146f1cb.setContent(html_10b1fee78c007e394cde72a420e4c989);
+            
+        
+
+        circle_93a2b4d53cbe9567d5d94f34775d0845.bindPopup(popup_7aade96c7c3bcfc9d81979bb1146f1cb)
+        ;
+
+        
+    
+    
+            var poly_line_bc45c7864666876a09d37f073db4fb60 = L.polyline(
+                [[35.18035823746264, 128.11851962302458], [35.20996249633627, 128.07320719979842]],
+                {"bubblingMouseEvents": true, "color": "black", "dashArray": null, "dashOffset": null, "fill": false, "fillColor": "black", "fillOpacity": 0.2, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "noClip": false, "opacity": 0.8, "smoothFactor": 1.0, "stroke": true, "weight": 2}
+            ).addTo(map_c1218c228cce94a4abc02e7da8000ee3);
+        
+    
+            poly_line_bc45c7864666876a09d37f073db4fb60.setText(
+                "\u2192 5.7km",
+                {
+  "repeat": false,
+  "center": false,
+  "below": false,
+  "offset": "50%",
+  "orientation": 0,
+  "attributes": {
+  "fill": "red",
+  "font-weight": "bold",
+  "font-size": "14",
+  "stroke": "white",
+  "stroke-width": "3",
+  "paint-order": "stroke",
+},
+}
+            );
+        
+    
+            var circle_5eb410726aa7d00a3465094286a078a7 = L.circle(
+                [35.144709171065, 128.0499448197931],
+                {"bubblingMouseEvents": true, "color": "red", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "red", "fillOpacity": 0.3, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 75, "stroke": true, "weight": 3}
+            ).addTo(map_c1218c228cce94a4abc02e7da8000ee3);
+        
+    
+        var popup_36db2b3a8db8bdcf7a89a5d042778b69 = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_0019b0926414905a52522c53bc0f4c3e = $(`<div id="html_0019b0926414905a52522c53bc0f4c3e" style="width: 100.0%; height: 100.0%;">                 <b>자원 정보</b><br>                 유형: truck<br>                 종류: FT3<br>                 수량: 1대<br>                 위치: (35.144709, 128.049945)<br>                 거리: 8.3km<br>                 화재 위험도 순위: 2             </div>`)[0];
+                popup_36db2b3a8db8bdcf7a89a5d042778b69.setContent(html_0019b0926414905a52522c53bc0f4c3e);
+            
+        
+
+        circle_5eb410726aa7d00a3465094286a078a7.bindPopup(popup_36db2b3a8db8bdcf7a89a5d042778b69)
+        ;
+
+        
+    
+    
+            var poly_line_68944f9d19ff5b1c43ee8d96035ab03a = L.polyline(
+                [[35.18035823746264, 128.11851962302458], [35.144709171065, 128.0499448197931]],
+                {"bubblingMouseEvents": true, "color": "black", "dashArray": null, "dashOffset": null, "fill": false, "fillColor": "black", "fillOpacity": 0.2, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "noClip": false, "opacity": 0.8, "smoothFactor": 1.0, "stroke": true, "weight": 2}
+            ).addTo(map_c1218c228cce94a4abc02e7da8000ee3);
+        
+    
+            poly_line_68944f9d19ff5b1c43ee8d96035ab03a.setText(
+                "\u2192 8.3km",
+                {
+  "repeat": false,
+  "center": false,
+  "below": false,
+  "offset": "50%",
+  "orientation": 0,
+  "attributes": {
+  "fill": "red",
+  "font-weight": "bold",
+  "font-size": "14",
+  "stroke": "white",
+  "stroke-width": "3",
+  "paint-order": "stroke",
+},
+}
+            );
+        
+</script>
+</html>

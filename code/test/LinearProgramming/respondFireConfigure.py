@@ -2,11 +2,14 @@ import pandas as pd
 from sklearn.impute import SimpleImputer
 import pulp
 from sklearn.preprocessing import StandardScaler
-import os
+import os, sys
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../..')))
+
 import random
 from typing import Dict, List, Tuple
 from sklearn.impute import KNNImputer
 import math
+from code.Map.Map import WildfireMap
 
 def load_and_preprocess_data():
     # 데이터 파일 경로 설정
@@ -238,8 +241,8 @@ class FireScenario:
             demand = max(1, min(5, base_demand + random.randint(-1, 1)))  # 1-5명
             
             # 화재 발생 지점의 위도/경도 생성 (경상남도 내에서 랜덤하게)
-            site_lat = random.uniform(35.0, 35.5)
-            site_lon = random.uniform(128.0, 129.0)
+            site_lat = random.uniform(35.28450887192325, 35.10468233527785)
+            site_lon = random.uniform(128.01212832039607, 128.18678592428446)
             
             # 기준 소방서로부터의 실제 거리 계산
             base_distance = self._calculate_distance(
@@ -315,10 +318,15 @@ class ResourceAllocator:
         # 결정변수 정의 (정수형으로 변경)
         x = pulp.LpVariable.dicts("truck_assign", 
                                 [(i,n) for i in self.truck_types for n in scenario.sites.keys()], 
-                                cat='Integer', lowBound=0, upBound=2)  # 최대 2대까지 배치 가능
+                                cat='Integer', lowBound=0, upBound=5)  # 최대 2대까지 배치 가능
         y = pulp.LpVariable.dicts("ff_assign", 
                                 [(j,n) for j in self.firefighter_types for n in scenario.sites.keys()], 
                                 cat='Integer', lowBound=0, upBound=3)  # 최대 3명까지 배치 가능
+        # 이진 변수 선언 (트럭 타입 i가 지점 n에 배치되면 1)
+        z = pulp.LpVariable.dicts("truck_location", 
+                                [(i,n) for i in self.truck_types for n in scenario.sites.keys()], 
+                                cat='Binary')
+
 
         # 목적함수
         model += pulp.lpSum(
@@ -332,9 +340,17 @@ class ResourceAllocator:
 
         # 제약조건
         # 소방차 최대 배치 수
+
         for i in self.truck_types:
             model += pulp.lpSum(x[(i,n)] for n in scenario.sites.keys()) <= 2  # 최대 2대까지 배치 가능
+            # 지점별 배치 제한 (1개 지점만 선택)
+            model += pulp.lpSum(x[(i,n)] for n in scenario.sites.keys()) <= 1
 
+            # x와 z 변수 연결
+            for n in scenario.sites.keys():
+                model += x[(i,n)] <= 2 * z[(i,n)]  # z=0 → x=0, z=1 → x≤2
+                model += x[(i,n)] >= z[(i,n)]      # z=1 → x≥1 (최소 1대 배치)
+        
         # 대원별 최대 출동 횟수
         for j in self.firefighter_types:
             model += pulp.lpSum(y[(j,n)] for n in scenario.sites.keys()) <= \
@@ -434,7 +450,7 @@ def main():
     print(f"배치 수: {len(all_results)}")
     print(f"성공한 시나리오 수: {successful_scenarios}/{len(scenarios)}")
     
-    # 시나리오별 배치 현황 출력
+    # 시나리오별 배치 현황 출력 및 지도 시각화
     for scenario in scenarios:
         scenario_results = [r for r in all_results if r['scenario'] == scenario.id]
         if scenario_results:  # 결과가 있는 시나리오만 출력
@@ -444,51 +460,25 @@ def main():
                   f"습도={scenario.cluster_stats['humidity']:.1f}%, "
                   f"피해 등급={scenario.cluster_stats['damage_class']}")
             print(f"기준 소방서 위치: {scenario.base_station['latitude']:.4f}, {scenario.base_station['longitude']:.4f}")
+            
+            # 지도 생성 및 시각화
+            map_obj = WildfireMap(
+                center_lat=scenario.base_station['latitude'],
+                center_lon=scenario.base_station['longitude'],
+                zoom=10
+            )
+            
+            # 자원 배치 결과 시각화
+            map_obj.add_resource_allocations(scenario.base_station, scenario_results)
+            
+            # 지도 저장 및 표시
+            map_obj.show_map(f'scenario_{scenario.id}_map.html')
+            
             for result in scenario_results:
                 print(f"- {result['resource_type']} {result['type']}, {result['quantity']}대 at {result['location']}, "
                       f"거리: {result['distance']:.1f}km, "
                       f"위치: {result['latitude']:.4f}, {result['longitude']:.4f}")
-                
-    # 최적화 결과 시각화
-    scenario_results_dict = {}
-    for scenario in scenarios:
-        scenario_results = [r for r in all_results if r['scenario'] == scenario.id]
-        if scenario_results:
-            scenario_results_dict[scenario.id] = {
-                'cluster_stats': scenario.cluster_stats,
-                'base_station': scenario.base_station,
-                'resources': scenario_results,
-                'map_data': {
-                    'lat': [r['latitude'] for r in scenario_results],
-                    'lon': [r['longitude'] for r in scenario_results],
-                    'damage_class': scenario.cluster_stats['damage_class'],
-                    'resource_types': [r['resource_type'] for r in scenario_results],
-                    'quantities': [r['quantity'] for r in scenario_results]
-                }
-            }
     
-    return scenario_results_dict
-
-"""
-예제: 
-results = main()  # 또는 해당 함수 호출
-
-# 특정 시나리오의 정보 접근
-scenario_id = 0
-if scenario_id in results:
-    scenario_data = results[scenario_id]
-    
-    # 지도 데이터 접근
-    map_data = scenario_data['map_data']
-    latitudes = map_data['lat']
-    longitudes = map_data['lon']
-    
-    # 자원 정보 접근
-    resources = scenario_data['resources']
-    
-    # 클러스터 통계 접근
-    stats = scenario_data['cluster_stats']
-"""
 
 if __name__ == "__main__":
     main()
