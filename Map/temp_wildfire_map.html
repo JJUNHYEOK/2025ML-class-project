@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html>
+<head>
+    
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap-glyphicons.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.2.0/css/all.min.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/python-visualization/folium/folium/templates/leaflet.awesome.rotate.min.css"/>
+    
+            <meta name="viewport" content="width=device-width,
+                initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+            <style>
+                #map_2962b5fa462a249e4983fb0e51ea395c {
+                    position: relative;
+                    width: 100.0%;
+                    height: 100.0%;
+                    left: 0.0%;
+                    top: 0.0%;
+                }
+                .leaflet-container { font-size: 1rem; }
+            </style>
+
+            <style>html, body {
+                width: 100%;
+                height: 100%;
+                margin: 0;
+                padding: 0;
+            }
+            </style>
+
+            <style>#map {
+                position:absolute;
+                top:0;
+                bottom:0;
+                right:0;
+                left:0;
+                }
+            </style>
+
+            <script>
+                L_NO_TOUCH = false;
+                L_DISABLE_3D = false;
+            </script>
+
+        
+    <script src="https://cdn.jsdelivr.net/npm/leaflet-textpath@1.2.3/leaflet.textpath.min.js"></script>
+</head>
+<body>
+    
+    
+            <div class="folium-map" id="map_2962b5fa462a249e4983fb0e51ea395c" ></div>
+        
+</body>
+<script>
+    
+    
+            var map_2962b5fa462a249e4983fb0e51ea395c = L.map(
+                "map_2962b5fa462a249e4983fb0e51ea395c",
+                {
+                    center: [35.180477, 128.108823],
+                    crs: L.CRS.EPSG3857,
+                    ...{
+  "zoom": 13,
+  "zoomControl": true,
+  "preferCanvas": false,
+}
+
+                }
+            );
+
+            
+
+        
+    
+            var tile_layer_7f8136638384d2a8964603b45cdc11fc = L.tileLayer(
+                "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+                {
+  "minZoom": 0,
+  "maxZoom": 19,
+  "maxNativeZoom": 19,
+  "noWrap": false,
+  "attribution": "\u0026copy; \u003ca href=\"https://www.openstreetmap.org/copyright\"\u003eOpenStreetMap\u003c/a\u003e contributors",
+  "subdomains": "abc",
+  "detectRetina": false,
+  "tms": false,
+  "opacity": 1,
+}
+
+            );
+        
+    
+            tile_layer_7f8136638384d2a8964603b45cdc11fc.addTo(map_2962b5fa462a249e4983fb0e51ea395c);
+        
+    
+            var circle_f2bdba3b5596257602c2659be9080e19 = L.circle(
+                [35.192631, 128.101987],
+                {"bubblingMouseEvents": true, "color": "red", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "red", "fillOpacity": 0.4, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 300, "stroke": true, "weight": 3}
+            ).addTo(map_2962b5fa462a249e4983fb0e51ea395c);
+        
+    
+        var popup_028864feea33b4521eb8286e4af2dc02 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_460002f75dc7df5a8f3f598f7a018dd3 = $(`<div id="html_460002f75dc7df5a8f3f598f7a018dd3" style="width: 100.0%; height: 100.0%;">화재 위험도 순위: 0</div>`)[0];
+                popup_028864feea33b4521eb8286e4af2dc02.setContent(html_460002f75dc7df5a8f3f598f7a018dd3);
+            
+        
+
+        circle_f2bdba3b5596257602c2659be9080e19.bindPopup(popup_028864feea33b4521eb8286e4af2dc02)
+        ;
+
+        
+    
+    
+            var circle_4e60c90a7ae7e4b64e4635d58a1d22de = L.circle(
+                [35.164399, 128.084513],
+                {"bubblingMouseEvents": true, "color": "red", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "red", "fillOpacity": 0.4, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 150, "stroke": true, "weight": 3}
+            ).addTo(map_2962b5fa462a249e4983fb0e51ea395c);
+        
+    
+        var popup_2392c45971640c24b948d886bb854347 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_ecbde32c143d813a01983282200275cf = $(`<div id="html_ecbde32c143d813a01983282200275cf" style="width: 100.0%; height: 100.0%;">화재 위험도 순위: 1</div>`)[0];
+                popup_2392c45971640c24b948d886bb854347.setContent(html_ecbde32c143d813a01983282200275cf);
+            
+        
+
+        circle_4e60c90a7ae7e4b64e4635d58a1d22de.bindPopup(popup_2392c45971640c24b948d886bb854347)
+        ;
+
+        
+    
+    
+            var circle_677b4622090aba0452aa934ec53f546f = L.circle(
+                [35.179789, 128.165785],
+                {"bubblingMouseEvents": true, "color": "red", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "red", "fillOpacity": 0.4, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 75, "stroke": true, "weight": 3}
+            ).addTo(map_2962b5fa462a249e4983fb0e51ea395c);
+        
+    
+        var popup_6c518ebe250591c00c565654984c53b7 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_a2e23d71f493bce419b496cb4c8f5d50 = $(`<div id="html_a2e23d71f493bce419b496cb4c8f5d50" style="width: 100.0%; height: 100.0%;">화재 위험도 순위: 2</div>`)[0];
+                popup_6c518ebe250591c00c565654984c53b7.setContent(html_a2e23d71f493bce419b496cb4c8f5d50);
+            
+        
+
+        circle_677b4622090aba0452aa934ec53f546f.bindPopup(popup_6c518ebe250591c00c565654984c53b7)
+        ;
+
+        
+    
+    
+            var circle_f5e9dac6da85bb633d846a3c5b6cfb23 = L.circle(
+                [35.18035823746264, 128.11851962302458],
+                {"bubblingMouseEvents": true, "color": "blue", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "blue", "fillOpacity": 0.3, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 100, "stroke": true, "weight": 3}
+            ).addTo(map_2962b5fa462a249e4983fb0e51ea395c);
+        
+    
+        var popup_a433d213068ac44e0107882afada1240 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_81135d34383b546f3072c837e33e3507 = $(`<div id="html_81135d34383b546f3072c837e33e3507" style="width: 100.0%; height: 100.0%;">소방서 위치</div>`)[0];
+                popup_a433d213068ac44e0107882afada1240.setContent(html_81135d34383b546f3072c837e33e3507);
+            
+        
+
+        circle_f5e9dac6da85bb633d846a3c5b6cfb23.bindPopup(popup_a433d213068ac44e0107882afada1240)
+        ;
+
+        
+    
+    
+            var poly_line_e19c41481760f1e6de691499262fd081 = L.polyline(
+                [[35.18035823746264, 128.11851962302458], [35.192631, 128.101987]],
+                {"bubblingMouseEvents": true, "color": "black", "dashArray": null, "dashOffset": null, "fill": false, "fillColor": "black", "fillOpacity": 0.2, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "noClip": false, "opacity": 0.8, "smoothFactor": 1.0, "stroke": true, "weight": 2}
+            ).addTo(map_2962b5fa462a249e4983fb0e51ea395c);
+        
+    
+            poly_line_e19c41481760f1e6de691499262fd081.setText(
+                "\u2192",
+                {
+  "repeat": false,
+  "center": false,
+  "below": false,
+  "offset": "50%",
+  "orientation": 0,
+  "attributes": {
+  "fill": "black",
+  "font-weight": "bold",
+  "font-size": "18",
+},
+}
+            );
+        
+    
+            var poly_line_63a4f3d3513bfb8746a02f0631689222 = L.polyline(
+                [[35.18035823746264, 128.11851962302458], [35.164399, 128.084513]],
+                {"bubblingMouseEvents": true, "color": "black", "dashArray": null, "dashOffset": null, "fill": false, "fillColor": "black", "fillOpacity": 0.2, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "noClip": false, "opacity": 0.8, "smoothFactor": 1.0, "stroke": true, "weight": 2}
+            ).addTo(map_2962b5fa462a249e4983fb0e51ea395c);
+        
+    
+            poly_line_63a4f3d3513bfb8746a02f0631689222.setText(
+                "\u2192",
+                {
+  "repeat": false,
+  "center": false,
+  "below": false,
+  "offset": "50%",
+  "orientation": 0,
+  "attributes": {
+  "fill": "black",
+  "font-weight": "bold",
+  "font-size": "18",
+},
+}
+            );
+        
+    
+            var poly_line_fb520871e1dbe97b0a23af3dcf605dbb = L.polyline(
+                [[35.18035823746264, 128.11851962302458], [35.179789, 128.165785]],
+                {"bubblingMouseEvents": true, "color": "black", "dashArray": null, "dashOffset": null, "fill": false, "fillColor": "black", "fillOpacity": 0.2, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "noClip": false, "opacity": 0.8, "smoothFactor": 1.0, "stroke": true, "weight": 2}
+            ).addTo(map_2962b5fa462a249e4983fb0e51ea395c);
+        
+    
+            poly_line_fb520871e1dbe97b0a23af3dcf605dbb.setText(
+                "\u2192",
+                {
+  "repeat": false,
+  "center": false,
+  "below": false,
+  "offset": "50%",
+  "orientation": 0,
+  "attributes": {
+  "fill": "black",
+  "font-weight": "bold",
+  "font-size": "18",
+},
+}
+            );
+        
+</script>
+</html>
