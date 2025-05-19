@@ -263,7 +263,8 @@ class FireScenario:
                     'wind_speed': self.cluster_stats['wind_speed'],
                     'fuel_type': self.cluster_stats['fuel_type'],
                     'slope': self.cluster_stats['slope'],
-                    'humidity': self.cluster_stats['humidity']
+                    'humidity': self.cluster_stats['humidity'],
+                    'damage_class': self.cluster_stats['damage_class']
                 },
                 'latitude': site_lat,
                 'longitude': site_lon
@@ -440,12 +441,54 @@ def main():
             print(f"\n시나리오 {scenario.id} 배치 현황:")
             print(f"위험 요소: 풍속={scenario.cluster_stats['wind_speed']:.1f}m/s, "
                   f"경사도={scenario.cluster_stats['slope']:.1f}도, "
-                  f"습도={scenario.cluster_stats['humidity']:.1f}%")
+                  f"습도={scenario.cluster_stats['humidity']:.1f}%, "
+                  f"피해 등급={scenario.cluster_stats['damage_class']}")
             print(f"기준 소방서 위치: {scenario.base_station['latitude']:.4f}, {scenario.base_station['longitude']:.4f}")
             for result in scenario_results:
                 print(f"- {result['resource_type']} {result['type']}, {result['quantity']}대 at {result['location']}, "
                       f"거리: {result['distance']:.1f}km, "
                       f"위치: {result['latitude']:.4f}, {result['longitude']:.4f}")
+                
+    # 최적화 결과 시각화
+    scenario_results_dict = {}
+    for scenario in scenarios:
+        scenario_results = [r for r in all_results if r['scenario'] == scenario.id]
+        if scenario_results:
+            scenario_results_dict[scenario.id] = {
+                'cluster_stats': scenario.cluster_stats,
+                'base_station': scenario.base_station,
+                'resources': scenario_results,
+                'map_data': {
+                    'lat': [r['latitude'] for r in scenario_results],
+                    'lon': [r['longitude'] for r in scenario_results],
+                    'damage_class': scenario.cluster_stats['damage_class'],
+                    'resource_types': [r['resource_type'] for r in scenario_results],
+                    'quantities': [r['quantity'] for r in scenario_results]
+                }
+            }
+    
+    return scenario_results_dict
+
+"""
+예제: 
+results = main()  # 또는 해당 함수 호출
+
+# 특정 시나리오의 정보 접근
+scenario_id = 0
+if scenario_id in results:
+    scenario_data = results[scenario_id]
+    
+    # 지도 데이터 접근
+    map_data = scenario_data['map_data']
+    latitudes = map_data['lat']
+    longitudes = map_data['lon']
+    
+    # 자원 정보 접근
+    resources = scenario_data['resources']
+    
+    # 클러스터 통계 접근
+    stats = scenario_data['cluster_stats']
+"""
 
 if __name__ == "__main__":
     main()
