@@ -294,12 +294,12 @@ class ResourceAllocator:
         1회 출동시 30만원 소요 (국민 부담금 X - 필수인프라)
         """
         self.truck_capabilities = {
-            'FT1': {'capacity': 1000, 'personnel': 4, 'fuel_efficiency': 8, 'speed': 70, 'cost': 5000},
-            'FT2': {'capacity': 1200, 'personnel': 5, 'fuel_efficiency': 7, 'speed': 65, 'cost': 6000},
-            'FT3': {'capacity': 1500, 'personnel': 6, 'fuel_efficiency': 6, 'speed': 60, 'cost': 7000},
-            'FT4': {'capacity': 1800, 'personnel': 7, 'fuel_efficiency': 5, 'speed': 55, 'cost': 8000},
-            'FT5': {'capacity': 2000, 'personnel': 8, 'fuel_efficiency': 4, 'speed': 50, 'cost': 9000},
-            'FT6': {'capacity': 2500, 'personnel': 9, 'fuel_efficiency': 3, 'speed': 45, 'cost': 10000}
+            'FT1': {'capacity': 2800, 'personnel': 4, 'fuel_efficiency': 4, 'speed': 36.8, 'cost': 300000},
+            'FT2': {'capacity': 3000, 'personnel': 4, 'fuel_efficiency': 5, 'speed': 36.8, 'cost': 300000},
+            'FT3': {'capacity': 2900, 'personnel': 4, 'fuel_efficiency': 6, 'speed': 40, 'cost': 300000},
+            'FT4': {'capacity': 2800, 'personnel': 3, 'fuel_efficiency': 5, 'speed': 36, 'cost': 300000},
+            'FT5': {'capacity': 2700, 'personnel': 2, 'fuel_efficiency': 4, 'speed': 32, 'cost': 300000},
+            'FT6': {'capacity': 3000, 'personnel': 2, 'fuel_efficiency': 4, 'speed': 42.3, 'cost': 300000}
         }
         
         self.firefighter_capabilities = { #소방관 투입 비용을 고려해야할까? 어차피 소방차를 운용하기 위해선 소방공무원이 필수적이라 비용 중복 여지가 있음.
