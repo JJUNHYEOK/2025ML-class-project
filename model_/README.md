@@ -35,6 +35,9 @@ YOLOv8을 기반으로 산불(화재) + 연기 이미지를 감지하는 모델�
 - 기존에 우려했던 석양, 그림자에 대한 오탐 사례가 거의 보이지 않음.
 
 ![predict dataset으로 예측한 결과](val_batch0_pred.jpg)
+
+---
+
 ![label dataset의 실제 결과](val_batch0_labels.jpg)
 
 - 각종 matrix 및 graph를 통한 정량적 해석은 차후 update 예정
