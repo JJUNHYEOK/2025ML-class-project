@@ -1,10 +1,10 @@
 from ultralytics import YOLO
 
 # Load a model
-model = YOLO('yolov8s.pt')  # load an official model
+model = YOLO('yolov8n.pt')  # load an official model
 
 PROJECT = 'WildFire_Detection’'  # project name
-NAME = 'yolov8n-exp1'  # run name
+NAME = 'yolov8n-exp16'  # run name
 
 model.train(
    data = 'data.yaml',
