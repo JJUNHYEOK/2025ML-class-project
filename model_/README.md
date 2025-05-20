@@ -1,4 +1,4 @@
-# Wildfire Detection using YOLOv8
+# 🔥 Wildfire Detection using YOLOv8 🚒
 
 YOLOv8을 기반으로 산불(화재) + 연기 이미지를 감지하는 모델을 개발한다.
 
