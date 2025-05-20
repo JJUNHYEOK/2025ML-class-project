@@ -24,4 +24,16 @@ YOLOv8을 기반으로 산불(화재) + 연기 이미지를 감지하는 모델�
   - Optimizer: Adam
 - 학습 환경: 연구실 리눅스 서버, Python 가상환경 (venv)
 - 학습 실행: `tmux`를 통해 장시간 학습 안정적으로 실행
+- 학습 모델 : 차후 HuggingFace를 통해 업로드 예정
+
+---
+
+
+### 3. 모델 예측 및 평가
+- label이 존재하는 데이터셋과 비교
+- 전체적으로 균형잡힌 화재/연기 탐지 및 식별 가능
+- 기존에 우려했던 석양, 그림자에 대한 오탐 사례가 거의 보이지 않음.
+
+<img src="../val_batch0_pred.jpg" width="300"/>
+<img src="../val_batch0_labels.jpg" width="300"/>
 
