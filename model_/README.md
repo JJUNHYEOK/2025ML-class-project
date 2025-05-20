@@ -34,6 +34,18 @@ YOLOv8을 기반으로 산불(화재) + 연기 이미지를 감지하는 모델�
 - 전체적으로 균형잡힌 화재/연기 탐지 및 식별 가능
 - 기존에 우려했던 석양, 그림자에 대한 오탐 사례가 거의 보이지 않음.
 
-![predict dataset으로 예측한 결과](model_/val_batch0_pred.jpg)
-![label dataset의 실제 결과](model_/val_batch0_labels.jpg)
+![predict dataset으로 예측한 결과](val_batch0_pred.jpg)
+![label dataset의 실제 결과](val_batch0_labels.jpg)
+
+- 각종 matrix 및 graph를 통한 정량적 해석은 차후 update 예정
+
+---
+
+
+### 차후 과제
+
+- 모델과 최적화 함수 및 시각화 서비스와의 파이프라인 구성
+- 모델 성능 향상이 필요한가 ? -> 필요하다면 학습전략 구축
+- 각종 정량지표 이용 결과 해석 및 보완점 탐색
+
 
