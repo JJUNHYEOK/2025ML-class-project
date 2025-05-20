@@ -34,6 +34,6 @@ YOLOv8을 기반으로 산불(화재) + 연기 이미지를 감지하는 모델�
 - 전체적으로 균형잡힌 화재/연기 탐지 및 식별 가능
 - 기존에 우려했던 석양, 그림자에 대한 오탐 사례가 거의 보이지 않음.
 
-<img src="../val_batch0_pred.jpg" width="300"/>
-<img src="../val_batch0_labels.jpg" width="300"/>
+![predict dataset으로 예측한 결과](model_/val_batch0_pred.jpg)
+![label dataset의 실제 결과](model_/val_batch0_labels.jpg)
 
