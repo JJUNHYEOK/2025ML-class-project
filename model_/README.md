@@ -57,15 +57,15 @@ YOLOv8을 기반으로 산불(화재) + 연기 이미지를 감지하는 모델�
 
 **클래스별 성능 분석**
 
-- True `smoke` (실제 연기)
+- **True `smoke` (실제 연기)**
 - 올바른 예측 : 780개 / `fire`로 잘못 예측 : 2개 / `background`로 잘못 예측 : 157개
 - 실제 `smoke` 샘플 수 : 939개
 
-- True `fire` (실제 화재)
+- **True `fire` (실제 화재)**
 - 올바른 예측 : 899개 / `smoke`로 잘못 예측 : 321개 / `background`로 잘못 예측 : 321개
 - 실제 `fire`샘플 수 : 1604개
 
-- True `background` (실제 배경)
+- **True `background` (실제 배경)**
 - 올바른 예측 : -개 / `smoke`로 잘못 예측 : 0개 / `background`로 잘못 예측 : 573개
 
 **주요 관찰**
@@ -86,17 +86,17 @@ YOLOv8을 기반으로 산불(화재) + 연기 이미지를 감지하는 모델�
 
 **재현율 분석**
 
-- True `smoke` (실제 연기)
+- **True `smoke` (실제 연기)**
 - 모델이 `smoke`로 예측 : 0.83(83%)
 - 모델이 `fire`로 예측 : 0에 수렴
 - 모델이 `background`로 예측 : 0.17 -> 실제 `smoke` 샘플 중 17%를 `background`로 잘못 예측
 
-- True `fire` (실제 화재)
+- **True `fire` (실제 화재)**
 - 모델이 `smoke`로 예측 : 0.26(26%)
 - 모델이 `fire`로 예측 : 0.73(73%)
 - 모델이 `background`로 예측 : 0.20 -> 실제 `smoke` 샘플 중 20%를 `background`로 잘못 예측
 
-- True `background` (실제 배경)
+-**True `background` (실제 배경)**
 - 모델이 `smoke`로 예측 : 0에 수렴
 - 모델이 `fire`로 예측 : 0.60(60%)
 - 모델이 `background`로 예측 : 0.40
@@ -107,15 +107,15 @@ YOLOv8을 기반으로 산불(화재) + 연기 이미지를 감지하는 모델�
 
 **종합적 해석**
 
-1. `smoke` 클래스 예측 성능
+1. **`smoke` 클래스 예측 성능**
 - 83%의 높은 재현율로 잘 찾아냄
 - 실제 `smoke`의 17%를 miss
 
-2. `fire` 클래스 예측 성능
+2. **`fire` 클래스 예측 성능**
 - 73%의 재현율. 준수하나 개선의 여지 있음.
 - 가장 큰 문제는 실제 `fire`의 26%를 `smoke`로 잘못 예측함.
 
-3. `background` 클래스 예측 성능
+3. **`background` 클래스 예측 성능**
 - 40%의 재현율, 비교적 낮은 성능
 - 실제 `background`의 60%를 `fire`로 오인함.
 
