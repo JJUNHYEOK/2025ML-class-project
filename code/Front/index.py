@@ -93,11 +93,6 @@ class FireGuardApp(QMainWindow):
         self.tabs.addTab(self.history_tab, "기록 조회")
 
     def run_fire_optimization_and_show_map(self):
-        # 자원 최적화 실행 버튼 클릭 시 드롭박스 비활성화
-        self.truck_type_combo.setEnabled(False)
-        self.truck_quantity_spin.setEnabled(False)
-        self.personnel_type_combo.setEnabled(False)
-        self.personnel_quantity_spin.setEnabled(False)
 
         # 데이터 로드 및 전처리
         features_processed, target_processed = load_and_preprocess_data()
@@ -565,6 +560,12 @@ class ResourceManagementTab(QWidget):
             self.table.setItem(row, 2, QTableWidgetItem("기지"))
 
     def apply_resource_settings(self):
+        # 자원 최적화 실행 버튼 클릭 시 드롭박스 비활성화
+        self.truck_type_combo.setEnabled(False)
+        self.truck_quantity_spin.setEnabled(False)
+        self.personnel_type_combo.setEnabled(False)
+        self.personnel_quantity_spin.setEnabled(False)
+
         """자원 설정을 적용하고 대시보드 업데이트"""
         truck_type = self.truck_type_combo.currentText()
         truck_quantity = self.truck_quantity_spin.value()
