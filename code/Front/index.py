@@ -22,6 +22,11 @@ from code.Map.Map import WildfireMap
 from code.Risk.RiskCalculator import RiskCalculator
 from code.Front.key import key
 
+#주소 찾기 코드 - 비동기
+import asyncio
+import aiohttp
+
+
 
 # 상수 정의
 MAP_DIR = os.path.join(os.path.dirname(__file__), '..', '..', 'maps')
@@ -88,6 +93,12 @@ class FireGuardApp(QMainWindow):
         self.tabs.addTab(self.history_tab, "기록 조회")
 
     def run_fire_optimization_and_show_map(self):
+        # 자원 최적화 실행 버튼 클릭 시 드롭박스 비활성화
+        self.truck_type_combo.setEnabled(False)
+        self.truck_quantity_spin.setEnabled(False)
+        self.personnel_type_combo.setEnabled(False)
+        self.personnel_quantity_spin.setEnabled(False)
+
         # 데이터 로드 및 전처리
         features_processed, target_processed = load_and_preprocess_data()
         if features_processed is None or target_processed is None:
@@ -97,7 +108,14 @@ class FireGuardApp(QMainWindow):
         # 시나리오 생성
         scenarios = generate_scenarios_from_data(features_processed, target_processed)
         allocator = ResourceAllocator()
-        
+
+        # 자원 관리 탭의 모든 설정을 반영
+        truck_settings, personnel_settings = self.resource_tab.get_all_resource_settings()
+        for truck_type, qty in truck_settings.items():
+            allocator.set_resource_deployment('truck', truck_type, qty)
+        for personnel_type, qty in personnel_settings.items():
+            allocator.set_resource_deployment('firefighter', personnel_type, qty)
+
         # 자원 현황 업데이트
         self.dashboard_tab.update_resource_status()
         
@@ -165,6 +183,9 @@ class FireGuardApp(QMainWindow):
                 
                 # 자원 현황 업데이트
                 self.dashboard_tab.update_resource_status()
+                
+                # 자원 탭의 위치 정보 업데이트
+                self.resource_tab.update_resource_locations(results)
                 break  # 첫 번째 시나리오만 표시
 
 
@@ -364,11 +385,11 @@ class DashboardTab(QWidget):
         wind_dir = self.deg_to_direction(wind_deg)
 
         # UI 업데이트
-        self.weather_labels["풍향"].setText(f"{wind_dir} 🌬️")
+        self.weather_labels["풍향"].setText(f"{wind_dir}")
         self.weather_labels["풍속"].setText(f"{wind_speed} m/s")
-        self.weather_labels["온도"].setText(f"{temp} °C 🌡️")
+        self.weather_labels["온도"].setText(f"{temp} °C")
         self.weather_labels["습도"].setText(f"{humidity}%")
-        self.weather_labels["강수량"].setText(f"{rain} mm 🌧️")
+        self.weather_labels["강수량"].setText(f"{rain} mm")
         self.weather_labels["대기질"].setText(air_quality)
 
         # 위험도 평가 업데이트
@@ -459,6 +480,7 @@ class ResourceManagementTab(QWidget):
         self.truck_quantity_spin = QSpinBox()
         self.truck_quantity_spin.setRange(0, 2)
         self.truck_quantity_spin.setValue(2)
+        self.truck_quantity_spin.setSpecialValueText("대기중")  # 0일 때 "대기중" 표시
         resource_layout.addWidget(self.truck_quantity_spin, 0, 3)
 
         # 인력 설정
@@ -471,6 +493,7 @@ class ResourceManagementTab(QWidget):
         self.personnel_quantity_spin = QSpinBox()
         self.personnel_quantity_spin.setRange(0, 3)
         self.personnel_quantity_spin.setValue(3)
+        self.personnel_quantity_spin.setSpecialValueText("대기중")  # 0일 때 "대기중" 표시
         resource_layout.addWidget(self.personnel_quantity_spin, 1, 3)
 
         # 설정 버튼
@@ -488,6 +511,35 @@ class ResourceManagementTab(QWidget):
         layout.addWidget(self.table)
 
         self.setLayout(layout)
+
+
+    async def get_road_address_from_coords(self, lon, lat):
+        url = "https://nominatim.openstreetmap.org/reverse"
+        params = {
+            "lat": lat,
+            "lon": lon,
+            "format": "json",
+            "zoom": 18,
+            "accept-language": "ko"
+        }
+        headers = {"User-Agent": "AIWRS/Beta1.0 (moongijun967@gmail.com)"}
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url, params=params, headers=headers, timeout=5) as response:
+                    if response.status == 200:
+                        data = await response.json()
+                        address = data.get('address', {})
+                        road = address.get('road', '')
+                        suburb = address.get('suburb', '')
+                        city = address.get('city', '')
+                        country = address.get('country', '')
+                        return f"{country} {city} {suburb} {road}" if road else "주소 없음"
+                    else:
+                        return f"API 오류: {response.status}"
+        except Exception as e:
+            return f"오류: {str(e)}"
+
+
 
     def load_current_resources(self):
         """현재 자원 설정을 로드"""
@@ -519,21 +571,100 @@ class ResourceManagementTab(QWidget):
         personnel_type = self.personnel_type_combo.currentText()
         personnel_quantity = self.personnel_quantity_spin.value()
 
+        # ResourceAllocator에 설정 적용
+        from code.test.LinearProgramming.respondFireConfigure import ResourceAllocator
+        allocator = ResourceAllocator()
+        allocator.set_resource_deployment('truck', truck_type, truck_quantity)
+        allocator.set_resource_deployment('firefighter', personnel_type, personnel_quantity)
+
         # 테이블 업데이트
         for row in range(self.table.rowCount()):
             resource_name = self.table.item(row, 0).text()
             if f"소방차 {truck_type}" in resource_name:
-                self.table.item(row, 1).setText(f"배치 중 ({truck_quantity}대)")
+                status = "대기중" if truck_quantity == 0 else f"배치 중 ({truck_quantity}대)"
+                self.table.item(row, 1).setText(status)
             elif f"인력 {personnel_type}" in resource_name:
-                self.table.item(row, 1).setText(f"배치 중 ({personnel_quantity}명)")
+                status = "대기중" if personnel_quantity == 0 else f"배치 중 ({personnel_quantity}명)"
+                self.table.item(row, 1).setText(status)
 
         # 대시보드 업데이트
         if hasattr(self, 'dashboard_tab'):
             self.dashboard_tab.update_resource_status()
 
+    def update_resource_locations(self, results):
+        """자원 배치 결과에 따라 위치 정보 업데이트 (동기 함수)"""
+        # 이벤트 루프 생성 및 실행
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        loop.run_until_complete(self._async_update_resource_locations(results))
+        loop.close()
+
+    async def _async_update_resource_locations(self, results):
+        """자원 배치 결과에 따라 위치 정보 업데이트"""
+        # 모든 좌표에 대한 주소 요청 태스크 생성
+        tasks = []
+        for result in results:
+            lon = result['longitude']
+            lat = result['latitude']
+            tasks.append(self.get_road_address_from_coords(lon, lat))
+    
+        # 모든 주소를 병렬로 조회
+        addresses = await asyncio.gather(*tasks)
+    
+        # 테이블 업데이트
+        address_idx = 0
+        for address_idx, result in enumerate(results):
+            for row in range(self.table.rowCount()):
+                resource_name = self.table.item(row, 0).text()
+                # 소방차 처리
+                if f"소방차 {result['type']}" in resource_name:
+                    self.table.setItem(row, 1, QTableWidgetItem(f"배치 완료 ({result['quantity']}대)"))
+                    self.table.setItem(row, 2, QTableWidgetItem(addresses[address_idx]))
+                    address_idx += 1
+                # 인력 처리
+                elif f"인력 {result['type']}" in resource_name:
+                    self.table.setItem(row, 1, QTableWidgetItem(f"배치 완료 ({result['quantity']}명)"))
+                    self.table.setItem(row, 2, QTableWidgetItem(addresses[address_idx]))
+                    address_idx += 1
+
+
+
     def connect_dashboard(self, dashboard_tab):
         """대시보드 탭과 연결"""
         self.dashboard_tab = dashboard_tab
+
+    def get_all_resource_settings(self):
+        """모든 자원(소방차, 인력)의 배치 수량을 딕셔너리로 반환"""
+        truck_settings = {}
+        personnel_settings = {}
+        for row in range(self.table.rowCount()):
+            resource_name = self.table.item(row, 0).text()
+            status = self.table.item(row, 1).text()
+            # 소방차
+            if resource_name.startswith("소방차"):
+                truck_type = resource_name.split()[1]
+                if "배치 중" in status:
+                    # 예: '배치 중 (2대)'
+                    try:
+                        qty = int(status.split("(")[1].split("대")[0])
+                    except:
+                        qty = 0
+                else:
+                    qty = 0
+                truck_settings[truck_type] = qty
+            # 인력
+            elif resource_name.startswith("인력"):
+                personnel_type = resource_name.split()[1]
+                if "배치 중" in status:
+                    # 예: '배치 중 (3명)'
+                    try:
+                        qty = int(status.split("(")[1].split("명")[0])
+                    except:
+                        qty = 0
+                else:
+                    qty = 0
+                personnel_settings[personnel_type] = qty
+        return truck_settings, personnel_settings
 
 
 class HistoryTab(QWidget):
