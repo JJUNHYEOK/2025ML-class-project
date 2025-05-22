@@ -2,6 +2,7 @@
 
 ## **👨‍🏫 프로젝트 소개**
 Python 기반 컴퓨터 비전과 최적화 알고리즘을 활용한 실시간 산불감지·자원배치 및 시각화 시스템 개발
+Artificial Intelligence-Based Wildfire Response Solution (AIWRS)
 
 ## **⏲️ 개발 기간**
 
