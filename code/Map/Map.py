@@ -158,9 +158,15 @@ class WildfireMap:
             )
             self.map.add_child(arrow)
 
-    def show_map(self, filename='temp_wildfire_map.html'):
+    def show_map(self, filename):
         """
-        지도를 HTML로 저장하고 브라우저로 자동 열기
+        지도를 HTML 파일로 저장합니다.
+        
+        Args:
+            filename (str): 저장할 파일의 전체 경로
         """
-        self.map.save(f"scenario/{filename}")
-        webbrowser.open('file://' + os.path.realpath(f"scenario/{filename}"))
+        # 디렉토리가 없으면 생성
+        os.makedirs(os.path.dirname(filename), exist_ok=True)
+        # 지도 저장
+        self.map.save(filename)
+        print(f"지도가 저장되었습니다: {filename}")

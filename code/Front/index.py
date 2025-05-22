@@ -1,5 +1,5 @@
-import sys
-import os
+import os, sys
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
 import requests
 import folium
 from datetime import datetime
@@ -10,10 +10,46 @@ from PyQt5.QtWidgets import (
     QHeaderView, QLineEdit, QComboBox, QDateEdit
 )
 from PyQt5.QtCore import Qt, QUrl, QDate
-from PyQt5.QtWebEngineWidgets import QWebEngineView
+from PyQt5.QtWebEngineWidgets import QWebEngineView, QWebEngineSettings, QWebEngineProfile
+import PyQt5
 
-os.environ["QTWEBENGINEPROCESS_PATH"] = r"code/Front/QtWebEngineProcess.exe"
+from code.test.LinearProgramming.respondFireConfigure import main as run_optimization
+from code.test.LinearProgramming.respondFireConfigure import load_and_preprocess_data
+from code.test.LinearProgramming.respondFireConfigure import generate_scenarios_from_data
+from code.test.LinearProgramming.respondFireConfigure import ResourceAllocator
+from code.Map.Map import WildfireMap
 
+# 상수 정의
+MAP_DIR = os.path.join(os.path.dirname(__file__), '..', '..', 'maps')
+os.makedirs(MAP_DIR, exist_ok=True)
+
+def find_qtwebengine_process():
+    # PyQt5 설치 경로 찾기
+    pyqt_path = os.path.dirname(PyQt5.__file__)
+    
+    # 가능한 경로들
+    possible_paths = [
+        os.path.join(pyqt_path, 'Qt5', 'bin', 'QtWebEngineProcess.exe'),
+        os.path.join(pyqt_path, 'Qt', 'bin', 'QtWebEngineProcess.exe'),
+        os.path.join(os.path.dirname(pyqt_path), 'PyQt5', 'Qt5', 'bin', 'QtWebEngineProcess.exe'),
+        os.path.join(os.path.dirname(pyqt_path), 'PyQt5', 'Qt', 'bin', 'QtWebEngineProcess.exe'),
+    ]
+    
+    # 현재 실행 파일 위치도 확인
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    possible_paths.append(os.path.join(current_dir, 'QtWebEngineProcess.exe'))
+    
+    # 각 경로 확인
+    for path in possible_paths:
+        if os.path.exists(path):
+            print(f"QtWebEngineProcess.exe를 찾았습니다: {path}")
+            return path
+    
+    print("경고: QtWebEngineProcess.exe를 찾을 수 없습니다.")
+    print("검색한 경로들:")
+    for path in possible_paths:
+        print(f"- {path}")
+    return None
 
 class FireGuardApp(QMainWindow):
     def __init__(self):
@@ -23,29 +59,67 @@ class FireGuardApp(QMainWindow):
         self.initUI()
 
     def initUI(self):
+        # WebEngine 설정 초기화
+        QWebEngineSettings.globalSettings().setAttribute(QWebEngineSettings.LocalStorageEnabled, True)
+        QWebEngineSettings.globalSettings().setAttribute(QWebEngineSettings.WebGLEnabled, True)
+        QWebEngineSettings.globalSettings().setAttribute(QWebEngineSettings.PluginsEnabled, True)
+        
         self.tabs = QTabWidget()
         self.setCentralWidget(self.tabs)
 
         self.dashboard_tab = DashboardTab()
-        # 지도 탭 제거
-        # self.map_tab = MapTab()
         self.resource_tab = ResourceManagementTab()
         self.history_tab = HistoryTab()
 
         self.history_tab.connect_dashboard(self.dashboard_tab)
 
+        optimize_button = QPushButton("자원 최적화 실행")
+        optimize_button.clicked.connect(self.run_fire_optimization_and_show_map)
+        self.tabs.setCornerWidget(optimize_button)
+
         self.tabs.addTab(self.dashboard_tab, "실시간 상황")
-        # 지도 탭 제거
-        # self.tabs.addTab(self.map_tab, "지도")
         self.tabs.addTab(self.resource_tab, "자원 관리")
         self.tabs.addTab(self.history_tab, "기록 조회")
+
+    def run_fire_optimization_and_show_map(self):
+        # 데이터 로드 및 전처리
+        features_processed, target_processed = load_and_preprocess_data()
+        if features_processed is None or target_processed is None:
+            print("데이터 로드 오류")
+            return
+
+        # 시나리오 생성
+        scenarios = generate_scenarios_from_data(features_processed, target_processed)
+        allocator = ResourceAllocator()
+        for scenario in scenarios:
+            results, cost = allocator.optimize_single_scenario(scenario)
+            if results:
+                # Map.py의 WildfireMap으로 지도 생성
+                map_obj = WildfireMap(
+                    center_lat=scenario.base_station['latitude'],
+                    center_lon=scenario.base_station['longitude'],
+                    zoom=12
+                )
+                map_obj.add_resource_allocations(scenario.base_station, results)
+                
+                # 지도 파일 저장
+                map_path = os.path.abspath(os.path.join(MAP_DIR, f'scenario_{scenario.id}_map.html'))
+                map_obj.show_map(map_path)
+                print(f"지도 파일이 저장되었습니다: {map_path}")
+                
+                # 생성된 지도를 MapTab에 표시
+                self.dashboard_tab.map_widget.load_scenario_map(scenario.id)
+                break  # 첫 번째 시나리오만 표시
 
 
 class DashboardTab(QWidget):
     def __init__(self):
         super().__init__()
         self.fire_logs = []
+        self.initUI()
+        self.update_weather_data()
 
+    def initUI(self):
         # --- 좌측 상단 네모들 ---
         main_layout = QHBoxLayout()
 
@@ -158,8 +232,6 @@ class DashboardTab(QWidget):
 
         self.setLayout(final_layout)
 
-        self.update_weather_data()
-
     def update_weather_data(self):
         api_key = "여기에_발급받은_API_키_넣기"
         lat, lon = 35.1767, 128.1035
@@ -211,14 +283,23 @@ class MapTab(QWidget):
         folium.Marker(location=[35.1767, 128.1035], tooltip="가좌동").add_to(m)
         folium.CircleMarker(location=[35.18, 128.10], radius=30, color='red', fill=True, fill_opacity=0.5, popup="화재 위험 지역").add_to(m)
 
-        map_path = os.path.abspath("map.html")
+        map_path = os.path.abspath(os.path.join(MAP_DIR, "map.html"))
         m.save(map_path)
+        print(f"기본 지도 파일이 저장되었습니다: {map_path}")
 
         self.web_view = QWebEngineView()
         self.web_view.load(QUrl.fromLocalFile(map_path))
         layout.addWidget(self.web_view)
 
         self.setLayout(layout)
+
+    def load_scenario_map(self, scenario_id):
+        map_path = os.path.abspath(os.path.join(MAP_DIR, f"scenario_{scenario_id}_map.html"))
+        if os.path.exists(map_path):
+            self.web_view.load(QUrl.fromLocalFile(map_path))
+            print(f"시나리오 지도를 로드했습니다: {map_path}")
+        else:
+            print(f"지도 파일을 찾을 수 없습니다: {map_path}")
 
 
 class ResourceManagementTab(QWidget):
@@ -309,6 +390,18 @@ class HistoryTab(QWidget):
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
+    
+    # Qt WebEngine 설정
+    qtwebengine_process = find_qtwebengine_process()
+    if qtwebengine_process:
+        os.environ['QTWEBENGINEPROCESS_PATH'] = qtwebengine_process
+        os.environ['QTWEBENGINE_CHROMIUM_FLAGS'] = '--single-process'
+        
+        # WebEngine 프로필 설정
+        profile = QWebEngineProfile.defaultProfile()
+        profile.setPersistentStoragePath(os.path.join(MAP_DIR, 'webengine_data'))
+        profile.setCachePath(os.path.join(MAP_DIR, 'webengine_cache'))
+    
     mainWin = FireGuardApp()
     mainWin.show()
     sys.exit(app.exec_())
