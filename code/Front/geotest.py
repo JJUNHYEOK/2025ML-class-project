@@ -1,7 +1,6 @@
 #/* Python 코드 사용예제 */     
 import requests	
 		
-import requests
 
 def get_road_address_from_coords(lat, lon):
     url = "https://nominatim.openstreetmap.org/reverse"

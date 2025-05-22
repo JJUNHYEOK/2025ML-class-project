@@ -94,3 +94,28 @@ Artificial Intelligence-Based Wildfire Response Solution (AIWRS)
 - 자원 분석
 - 자원 분배
 - 어플리케이션 시각화
+
+## **사용 방법**
+1. requirements.txt 설치
+```bash
+pip install -r requirements.txt
+```
+
+
+2. WSQ000301.csv 포함
+```
+datasets/WSQ000301.csv
+```
+
+**공공데이터이므로 공공데이터 포털에서 다운 받는다.*
+[공공산림데이터] (https://www.bigdata-forest.kr/product/WSQ000301).
+
+
+3. run.py의 BOOL_DEBUG를 False로 수정한다.
+**만약 경로 문제가 발생하는 경우 BOOL_DEBUG를 True로 변경하십시오.**
+
+
+4. 실행
+```bash
+python run.py
+```

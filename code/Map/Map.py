@@ -1,6 +1,5 @@
 # Map.py
 import folium
-import webbrowser
 import os
 from folium import PolyLine
 from folium.plugins import PolyLineTextPath
