@@ -302,13 +302,40 @@ class ResourceAllocator:
             'FT6': {'capacity': 3000, 'personnel': 2, 'fuel_efficiency': 4, 'speed': 42.3, 'cost': 300000}
         }
         
-        self.firefighter_capabilities = { #소방관 투입 비용을 고려해야할까? 어차피 소방차를 운용하기 위해선 소방공무원이 필수적이라 비용 중복 여지가 있음.
+        self.firefighter_capabilities = {
             'FF1': {'max_deployments': 3, 'cost': 2000},
             'FF2': {'max_deployments': 3, 'cost': 2000},
             'FF3': {'max_deployments': 3, 'cost': 2000},
             'FF4': {'max_deployments': 3, 'cost': 2000},
             'FF5': {'max_deployments': 3, 'cost': 2000},
             'FF6': {'max_deployments': 3, 'cost': 2000}
+        }
+
+        # 자원 배치 상태 초기화
+        self.truck_deployments = {truck_type: 0 for truck_type in self.truck_types}
+        self.firefighter_deployments = {ff_type: 0 for ff_type in self.firefighter_types}
+
+    def set_resource_deployment(self, resource_type: str, resource_id: str, quantity: int):
+        """자원 배치 상태를 설정"""
+        if resource_type == 'truck' and resource_id in self.truck_types:
+            self.truck_deployments[resource_id] = min(quantity, 2)  # 최대 2대
+        elif resource_type == 'firefighter' and resource_id in self.firefighter_types:
+            self.firefighter_deployments[resource_id] = min(quantity, 3)  # 최대 3명
+
+    def get_available_resources(self):
+        """현재 사용 가능한 자원 현황 반환"""
+        return {
+            'trucks': {truck_type: 2 - self.truck_deployments[truck_type] 
+                      for truck_type in self.truck_types},
+            'firefighters': {ff_type: 3 - self.firefighter_deployments[ff_type] 
+                           for ff_type in self.firefighter_types}
+        }
+
+    def get_deployed_resources(self):
+        """현재 배치된 자원 현황 반환"""
+        return {
+            'trucks': self.truck_deployments.copy(),
+            'firefighters': self.firefighter_deployments.copy()
         }
 
     def optimize_single_scenario(self, scenario: FireScenario) -> Tuple[List[Dict], float]:
@@ -318,15 +345,15 @@ class ResourceAllocator:
         # 결정변수 정의 (정수형으로 변경)
         x = pulp.LpVariable.dicts("truck_assign", 
                                 [(i,n) for i in self.truck_types for n in scenario.sites.keys()], 
-                                cat='Integer', lowBound=0, upBound=5)  # 최대 2대까지 배치 가능
+                                cat='Integer', lowBound=0, upBound=2)  # 최대 2대까지 배치 가능
         y = pulp.LpVariable.dicts("ff_assign", 
                                 [(j,n) for j in self.firefighter_types for n in scenario.sites.keys()], 
                                 cat='Integer', lowBound=0, upBound=3)  # 최대 3명까지 배치 가능
+
         # 이진 변수 선언 (트럭 타입 i가 지점 n에 배치되면 1)
         z = pulp.LpVariable.dicts("truck_location", 
                                 [(i,n) for i in self.truck_types for n in scenario.sites.keys()], 
                                 cat='Binary')
-
 
         # 목적함수
         model += pulp.lpSum(
@@ -339,10 +366,10 @@ class ResourceAllocator:
         )
 
         # 제약조건
-        # 소방차 최대 배치 수
-
+        # 소방차 최대 배치 수 (현재 배치 상태 고려)
         for i in self.truck_types:
-            model += pulp.lpSum(x[(i,n)] for n in scenario.sites.keys()) <= 2  # 최대 2대까지 배치 가능
+            model += pulp.lpSum(x[(i,n)] for n in scenario.sites.keys()) <= \
+                    (2 - self.truck_deployments[i])  # 현재 배치된 수량을 고려
             # 지점별 배치 제한 (1개 지점만 선택)
             model += pulp.lpSum(x[(i,n)] for n in scenario.sites.keys()) <= 1
 
@@ -351,10 +378,10 @@ class ResourceAllocator:
                 model += x[(i,n)] <= 2 * z[(i,n)]  # z=0 → x=0, z=1 → x≤2
                 model += x[(i,n)] >= z[(i,n)]      # z=1 → x≥1 (최소 1대 배치)
         
-        # 대원별 최대 출동 횟수
+        # 대원별 최대 출동 횟수 (현재 배치 상태 고려)
         for j in self.firefighter_types:
             model += pulp.lpSum(y[(j,n)] for n in scenario.sites.keys()) <= \
-                    self.firefighter_capabilities[j]['max_deployments']
+                    (self.firefighter_capabilities[j]['max_deployments'] - self.firefighter_deployments[j])
 
         # 지점별 인원 수요 충족 (완화된 제약)
         for n in scenario.sites.keys():
@@ -384,6 +411,8 @@ class ResourceAllocator:
             for i in self.truck_types:
                 for n in scenario.sites.keys():
                     if pulp.value(x[(i,n)]) > 0.5:
+                        # 자원 배치 상태 업데이트
+                        self.truck_deployments[i] += int(pulp.value(x[(i,n)]))
                         results.append({
                             'scenario': scenario.id,
                             'base_station': scenario.base_station,
@@ -399,6 +428,8 @@ class ResourceAllocator:
             for j in self.firefighter_types:
                 for n in scenario.sites.keys():
                     if pulp.value(y[(j,n)]) > 0.5:
+                        # 자원 배치 상태 업데이트
+                        self.firefighter_deployments[j] += int(pulp.value(y[(j,n)]))
                         results.append({
                             'scenario': scenario.id,
                             'type': j,
@@ -412,6 +443,111 @@ class ResourceAllocator:
             
             return results, pulp.value(model.objective)
         return [], float('inf')
+
+class RiskCalculator:
+    def __init__(self):
+        self.risk_factors = {
+            'wind_speed': {
+                'weight': 0.3,
+                'thresholds': [(0, 0.2), (5, 0.4), (10, 0.6), (15, 0.8), (20, 1.0)]
+            },
+            'humidity': {
+                'weight': 0.2,
+                'thresholds': [(80, 0.2), (60, 0.4), (40, 0.6), (20, 0.8), (0, 1.0)]
+            },
+            'fuel_type': {
+                'weight': 0.2,
+                'values': {
+                    1: 0.2,  # 낮은 연료량
+                    2: 0.4,
+                    3: 0.6,
+                    4: 0.8,
+                    5: 1.0   # 높은 연료량
+                }
+            },
+            'slope': {
+                'weight': 0.15,
+                'thresholds': [(0, 0.2), (10, 0.4), (20, 0.6), (30, 0.8), (45, 1.0)]
+            },
+            'damage_class': {
+                'weight': 0.15,
+                'values': {
+                    1: 0.2,  # 낮은 피해 등급
+                    2: 0.4,
+                    3: 0.6,
+                    4: 0.8,
+                    5: 1.0   # 높은 피해 등급
+                }
+            }
+        }
+
+    def calculate_risk_score(self, risk_factors: Dict) -> float:
+        """위험 요소들을 기반으로 위험도 점수 계산 (0-100)"""
+        total_score = 0
+        total_weight = 0
+
+        for factor, value in risk_factors.items():
+            if factor in self.risk_factors:
+                factor_info = self.risk_factors[factor]
+                weight = factor_info['weight']
+                
+                if 'thresholds' in factor_info:
+                    # 연속형 변수 처리 (풍속, 습도, 경사도)
+                    score = self._calculate_continuous_score(value, factor_info['thresholds'])
+                else:
+                    # 이산형 변수 처리 (연료 유형, 피해 등급)
+                    score = factor_info['values'].get(value, 0.5)
+                
+                total_score += score * weight
+                total_weight += weight
+
+        # 가중 평균 계산 및 100점 만점으로 변환
+        final_score = (total_score / total_weight) * 100 if total_weight > 0 else 0
+        return round(final_score, 1)
+
+    def _calculate_continuous_score(self, value: float, thresholds: List[Tuple[float, float]]) -> float:
+        """연속형 변수의 점수 계산"""
+        for i in range(len(thresholds) - 1):
+            if thresholds[i][0] <= value < thresholds[i + 1][0]:
+                # 선형 보간
+                x1, y1 = thresholds[i]
+                x2, y2 = thresholds[i + 1]
+                return y1 + (y2 - y1) * (value - x1) / (x2 - x1)
+        
+        # 범위를 벗어난 경우
+        if value < thresholds[0][0]:
+            return thresholds[0][1]
+        return thresholds[-1][1]
+
+    def get_risk_level(self, score: float) -> str:
+        """위험도 점수를 기반으로 위험 수준 반환"""
+        if score >= 80:
+            return "심각"
+        elif score >= 60:
+            return "높음"
+        elif score >= 40:
+            return "보통"
+        elif score >= 20:
+            return "낮음"
+        else:
+            return "매우 낮음"
+
+    def get_risk_factors_description(self, risk_factors: Dict) -> List[str]:
+        """위험 요소들의 설명 반환"""
+        descriptions = []
+        
+        if risk_factors.get('wind_speed', 0) >= 15:
+            descriptions.append("강한 바람")
+        if risk_factors.get('humidity', 100) <= 30:
+            descriptions.append("건조한 날씨")
+        if risk_factors.get('fuel_type', 1) >= 4:
+            descriptions.append("높은 연료량")
+        if risk_factors.get('slope', 0) >= 30:
+            descriptions.append("가파른 경사")
+        if risk_factors.get('damage_class', 1) >= 4:
+            descriptions.append("높은 피해 등급")
+            
+        return descriptions
 
 def main():
     print("화재 대응 자원 배치 최적화 시스템")
