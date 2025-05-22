@@ -1,8 +1,12 @@
-# **2025 ML Project - 인공지능 기반 산불 대응 솔루션**
+# **2025 GNU ML Project - 인공지능 기반 산불 대응 솔루션**
 
 ## **👨‍🏫 프로젝트 소개**
-Python 기반 컴퓨터 비전과 최적화 알고리즘을 활용한 실시간 산불감지·자원배치 및 시각화 시스템 개발
-Artificial Intelligence-Based Wildfire Response Solution (AIWRS)
+Python 기반 컴퓨터 비전과 최적화 알고리즘을 활용한 실시간 산불감지·자원배치 및 시각화 시스템 개발  
+**Artificial Intelligence-Based Wildfire Response Solution (AIWRS)**
+
+![Image](https://gijun.notion.site/image/attachment%3A29265e95-2cc3-4a6e-a159-de5ab6fff609%3A%EC%8A%A4%ED%81%AC%EB%A6%B0%EC%83%B7_2025-05-22_152427.png?table=block&id=1fbe7e8d-fc4a-8050-a07b-d0616ffcaff1&spaceId=beb5f5c9-5ecd-4100-95bc-79cc3c53ea0e&width=1420&userId=&cache=v2)
+![Image](https://gijun.notion.site/image/attachment%3A440094bc-5812-4661-ba0b-0d8e8e8e470e%3A%EC%8A%A4%ED%81%AC%EB%A6%B0%EC%83%B7_2025-05-22_152432.png?table=block&id=1fbe7e8d-fc4a-80fe-bcbc-fd2abd458059&spaceId=beb5f5c9-5ecd-4100-95bc-79cc3c53ea0e&width=1420&userId=&cache=v2)
+![Image](https://gijun.notion.site/image/attachment%3A579e725a-2fab-4fb2-b1ba-6f3f1543edf0%3A%EC%8A%A4%ED%81%AC%EB%A6%B0%EC%83%B7_2025-05-22_152436.png?table=block&id=1fbe7e8d-fc4a-8019-a2c9-db1050b2393d&spaceId=beb5f5c9-5ecd-4100-95bc-79cc3c53ea0e&width=1420&userId=&cache=v2)
 
 ## **⏲️ 개발 기간**
 
