@@ -108,10 +108,10 @@ datasets/WSQ000301.csv
 ```
 
 **공공데이터이므로 공공데이터 포털에서 다운 받는다.*
-[공공산림데이터] (https://www.bigdata-forest.kr/product/WSQ000301).
+[공공산림데이터](https://www.bigdata-forest.kr/product/WSQ000301).
 
 
-3. run.py의 BOOL_DEBUG를 False로 수정한다.
+3. run.py의 BOOL_DEBUG를 False로 수정한다.  
 **만약 경로 문제가 발생하는 경우 BOOL_DEBUG를 True로 변경하십시오.**
 
 
