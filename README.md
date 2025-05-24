@@ -1,4 +1,6 @@
 # **2025 GNU ML Project - 인공지능 기반 산불 대응 솔루션**
+![Image](https://gijun.notion.site/image/attachment%3A777fa5bd-03a7-4c8d-a01f-9899cb00eff8%3AChatGPT_Image_2025%EB%85%84_5%EC%9B%94_24%EC%9D%BC_%EC%98%A4%EC%A0%84_10_28_12.png?table=block&id=1fde7e8d-fc4a-8001-b258-f03de2dd3bf7&spaceId=beb5f5c9-5ecd-4100-95bc-79cc3c53ea0e&width=1420&userId=&cache=v2)
+
 
 ## **👨‍🏫 프로젝트 소개**
 Python 기반 컴퓨터 비전과 최적화 알고리즘을 활용한 실시간 산불감지·자원배치 및 시각화 시스템 개발  
