@@ -7,11 +7,12 @@ from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QPushButton, QLabel, QTabWidget, QTextEdit, QTableWidget, QTableWidgetItem,
     QGroupBox, QGridLayout, QProgressBar,
-    QHeaderView, QLineEdit, QComboBox, QDateEdit, QSpinBox
+    QHeaderView, QLineEdit, QComboBox, QDateEdit, QSpinBox, QFileDialog, QStatusBar
 )
 from PyQt5.QtCore import Qt, QUrl, QDate
 from PyQt5.QtWebEngineWidgets import QWebEngineView, QWebEngineSettings, QWebEngineProfile
 import PyQt5
+from PyQt5.QtGui import *
 from typing import Dict
 
 from code.test.LinearProgramming.respondFireConfigure import main as run_optimization
@@ -65,6 +66,7 @@ class FireGuardApp(QMainWindow):
         super().__init__()
         self.setWindowTitle("AIWRS 대시보드")
         self.setGeometry(100, 100, 1200, 800)
+        self.setWindowIcon(QIcon('code\Front\icon.png'))
         self.initUI()
 
     def initUI(self):
@@ -75,6 +77,8 @@ class FireGuardApp(QMainWindow):
         
         self.tabs = QTabWidget()
         self.setCentralWidget(self.tabs)
+        self.status_bar = self.statusBar()
+        self.video_tab = VideoTab(status_bar=self.status_bar)
 
         self.dashboard_tab = DashboardTab()
         self.resource_tab = ResourceManagementTab()
@@ -91,6 +95,7 @@ class FireGuardApp(QMainWindow):
         self.tabs.addTab(self.dashboard_tab, "실시간 상황")
         self.tabs.addTab(self.resource_tab, "자원 관리")
         self.tabs.addTab(self.history_tab, "기록 조회")
+        self.tabs.addTab(self.video_tab, "영상 분석")
 
     def run_fire_optimization_and_show_map(self):
 
@@ -718,6 +723,67 @@ class HistoryTab(QWidget):
         else:
             self.log_view.setPlainText("대시보드 연결 실패")
 
+import cv2
+class VideoTab(QWidget):
+    def __init__(self, status_bar=None):
+        super().__init__()
+        self.status_bar = status_bar
+        self.layout = QVBoxLayout()
+
+        self.video_player = QLabel(parent=self)
+
+        btn_layout = QHBoxLayout()
+        btn_layout.addStretch(stretch=1)  # 오른쪽 정렬
+
+        btn_layout_v = QVBoxLayout()
+        btn_layout_v.addStretch(stretch=10)
+
+        self.analyze_btn = QPushButton("영상 분석")
+        self.analyze_btn.clicked.connect(self.analyze_video)
+        btn_layout.addWidget(self.analyze_btn)
+
+        self.delete_btn = QPushButton("영상 삭제")
+        self.delete_btn.clicked.connect(self.delete_video)
+        btn_layout.addWidget(self.delete_btn)
+
+        self.layout.addLayout(btn_layout)
+        self.layout.addLayout(btn_layout_v)
+        self.setLayout(self.layout)
+
+    def analyze_video(self):
+        fname, _ = QFileDialog.getOpenFileName(self, "Open Video", "", "Video Files (*.mp4 *.avi)")
+        if not fname:
+            self.status_bar.showMessage("영상 파일을 선택해주세요.")
+            return
+        
+        self.cap = cv2.VideoCapture(fname)
+
+        width = self.cap.get(cv2.CAP_PROP_FRAME_WIDTH)
+        height = self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
+        self.video_player.resize(int(width), int(height))
+
+        if self.cap is None:
+            self.status_bar.showMessage("영상 파일 읽기 실패")
+            return
+        
+        while True:
+            ret, frame = self.cap.read()
+            if not ret:
+                break
+
+            img = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            h, w, ch = img.shape
+            qImg = QImage(img.data, w, h, ch*w, QImage.Format_RGB888)
+            self.pixmap = QPixmap.fromImage(qImg)
+            self.video_player.setPixmap(self.pixmap)
+            cv2.waitKey(int(self.cap.get(cv2.CAP_PROP_FPS)))
+
+        self.cap.release()
+
+    def delete_video(self):
+        self.cap.release()
+        self.video_player.clear()
+        self.status_bar.showMessage("영상 삭제 완료")
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
