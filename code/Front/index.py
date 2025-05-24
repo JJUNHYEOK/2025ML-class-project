@@ -19,9 +19,11 @@ from code.test.LinearProgramming.respondFireConfigure import main as run_optimiz
 from code.test.LinearProgramming.respondFireConfigure import load_and_preprocess_data
 from code.test.LinearProgramming.respondFireConfigure import generate_scenarios_from_data
 from code.test.LinearProgramming.respondFireConfigure import ResourceAllocator
+
 from code.Map.Map import WildfireMap
 from code.Risk.RiskCalculator import RiskCalculator
 from code.Front.key import key
+from code.Front.index_popup import IndexPopup
 
 #주소 찾기 코드 - 비동기
 import asyncio
@@ -61,12 +63,24 @@ def find_qtwebengine_process():
         print(f"- {path}")
     return None
 
+class Messenger:
+    def __init__(self, scenario, parent=None):
+        self.scenario = scenario
+        self.parent = parent  # 부모 윈도우 저장
+        self.popup = None    # 팝업 객체 초기화
+        self.show_popup()
+
+    def show_popup(self):
+        self.popup = IndexPopup(self.scenario, parent=self.parent)
+        self.popup.show()  # 비모달로 표시
+
 class FireGuardApp(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("AIWRS 대시보드")
         self.setGeometry(100, 100, 1200, 800)
         self.setWindowIcon(QIcon('code\Front\icon.png'))
+        self.popups = []
         self.initUI()
 
     def initUI(self):
@@ -92,6 +106,7 @@ class FireGuardApp(QMainWindow):
         optimize_button.clicked.connect(self.run_fire_optimization_and_show_map)
         self.tabs.setCornerWidget(optimize_button)
 
+
         self.tabs.addTab(self.dashboard_tab, "실시간 상황")
         self.tabs.addTab(self.resource_tab, "자원 관리")
         self.tabs.addTab(self.history_tab, "기록 조회")
@@ -107,6 +122,10 @@ class FireGuardApp(QMainWindow):
 
         # 시나리오 생성
         scenarios = generate_scenarios_from_data(features_processed, target_processed)
+        print(f"scenarios type: {type(scenarios)}, length: {len(scenarios)}, content: {scenarios}")
+        if not scenarios:
+            print("시나리오가 생성되지 않음")
+            return
         allocator = ResourceAllocator()
 
         # 자원 관리 탭의 모든 설정을 반영
@@ -186,6 +205,15 @@ class FireGuardApp(QMainWindow):
                 
                 # 자원 탭의 위치 정보 업데이트
                 self.resource_tab.update_resource_locations(results)
+
+                index = 0
+                print(f"Using index: {index}, type: {type(index)}")  # 인덱스 타입 확인
+                try:
+                    m = Messenger(avg_risk_factors, parent=self)
+                    self.popups.append(m)
+                except TypeError as e:
+                    print(f"TypeError: {e} - Check if index is float or scenarios is not a list")
+
                 break  # 첫 번째 시나리오만 표시
 
 
