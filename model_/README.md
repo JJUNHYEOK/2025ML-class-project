@@ -10,7 +10,16 @@ YOLOv8을 기반으로 산불(화재) + 연기 이미지를 감지하는 모델�
 - `wildfire-detection` 깃허브 레포지토리의 `training-recipes` 기반으로 프로젝트 구조 구성
 - 학습용 이미지/라벨 데이터 준비 완료
 - 학습 데이터 경로: `/home/jjh/ML/D-Fire`
+  <tr><td>
+    
+  | Category | # Images |
+  | ------------- | ------------- |
+  | Only fire  | 1,164  |
+  | Only smoke  | 5,867  |
+  | Fire and smoke  | 4,658  |
+  | None  | 9,838  |
 
+  </td><td>
 ---
 
 ### 2. 📝 모델 학습
@@ -25,6 +34,7 @@ YOLOv8을 기반으로 산불(화재) + 연기 이미지를 감지하는 모델�
 - 학습 환경: 연구실 리눅스 서버, Python 가상환경 (venv)
 - 학습 실행: `tmux`를 통해 장시간 학습 안정적으로 실행
 - 학습 모델 : 차후 HuggingFace를 통해 업로드 예정
+
 
 ---
 
