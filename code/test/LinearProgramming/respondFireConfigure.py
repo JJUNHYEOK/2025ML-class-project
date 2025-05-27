@@ -339,8 +339,8 @@ class ResourceAllocator:
             'FF3': {'max_deployments': 10, 'cost': 2000}, 'FF4': {'max_deployments': 10, 'cost': 2000},
             'FF5': {'max_deployments': 10, 'cost': 2000}, 'FF6': {'max_deployments': 10, 'cost': 2000}
         }
-        self.MAX_TRUCKS_PER_TYPE_TOTAL = 11 # 각 트럭 타입별 전체 보유 대수
-        self.MAX_FF_PER_TYPE_TOTAL = 335     # 각 소방관 타입별 전체 보유 인원
+        self.MAX_TRUCKS_PER_TYPE_TOTAL = 1 # 각 트럭 타입별 전체 보유 대수 (한 그룹을 몇 대씩 보유하고 있는가?)
+        self.MAX_FF_PER_TYPE_TOTAL = 30     # 각 소방관 타입별 전체 보유 인원
 
         self.truck_deployments = {truck_type: 0 for truck_type in self.truck_types} # 시나리오 간 누적 X
         self.firefighter_deployments = {ff_type: 0 for ff_type in self.firefighter_types} # 시나리오 간 누적 X
@@ -397,7 +397,6 @@ class ResourceAllocator:
         
         # 5. 트럭이 특정 위치에 가기로 결정되면(z=1) 최소 1대 이상, 최대 MAX_TRUCKS_PER_TYPE_SCENARIO 대까지 (또는 해당 타입의 총 보유 대수)
         #    트럭이 가지 않으면(z=0) 0대.
-        #    그리고 각 트럭 "타입"은 전체 시나리오에서 최대 "한 곳"의 지점에만 대표로 갈 수 있다는 제약은 제거 (이전 버전에서 문제 유발 가능성)
         for i in self.truck_types:
             for n in scenario.sites.keys():
                 model += x[(i,n)] <= self.MAX_TRUCKS_PER_TYPE_TOTAL * z[(i,n)] # 해당 타입의 최대 가용대수 * z
@@ -566,6 +565,7 @@ def main():
             all_results.extend(results)
             total_cost += cost * scenario.probability 
             print(f"시나리오 {scenario.id} 최적화 완료. 비용: {cost:.0f}")
+            print(f"시나리오 {scenario.id} 최적화 결과: {results}")
         # else: # 최적해 못찾았을 때 (infeasible 등) 메시지는 optimize_single_scenario 내부에서 출력
             # print(f"시나리오 {scenario.id} 최적화 실패 또는 배치할 자원 없음.")
 
