@@ -14,9 +14,12 @@ from PyQt5.QtWebEngineWidgets import QWebEngineView, QWebEngineSettings, QWebEng
 import PyQt5
 from PyQt5.QtGui import *
 from typing import Dict
+import cv2
+import numpy as np
+import torch
+from ultralytics import YOLO
 
 from code.test.LinearProgramming.respondFireConfigure import main as run_optimization
-from code.test.LinearProgramming.respondFireConfigure import load_and_preprocess_data
 from code.test.LinearProgramming.respondFireConfigure import generate_scenarios_from_data
 from code.test.LinearProgramming.respondFireConfigure import ResourceAllocator
 
@@ -29,7 +32,20 @@ from code.Front.index_popup import IndexPopup
 import asyncio
 import aiohttp
 
+# YOLO 모델 로드
+fire_model = YOLO('model_/best.pt')  # 학습된 모델 이용
 
+def visualize_fire_detection(frame, results):
+    for result in results:
+        boxes = result.boxes
+        for box in boxes:
+            x1, y1, x2, y2 = box.xyxy[0]
+            conf = box.conf[0]
+            cls = box.cls[0]
+            cv2.rectangle(frame, (int(x1), int(y1)), (int(x2), int(y2)), (0, 0, 255), 2)
+            cv2.putText(frame, f'Fire: {conf:.2f}', (int(x1), int(y1-10)), 
+                       cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 0, 255), 2)
+    return frame
 
 # 상수 정의
 MAP_DIR = os.path.join(os.path.dirname(__file__), '..', '..', 'maps')
@@ -752,6 +768,7 @@ class HistoryTab(QWidget):
             self.log_view.setPlainText("대시보드 연결 실패")
 
 import cv2
+import code.videoProcess.videoProcess as vP
 class VideoTab(QWidget):
     def __init__(self, status_bar=None):
         super().__init__()
@@ -798,6 +815,19 @@ class VideoTab(QWidget):
             ret, frame = self.cap.read()
             if not ret:
                 break
+
+            # YOLO 모델로 화재 감지 수행
+            detection_result = fire_model(frame)
+
+            # 전처리 수행 (화재 색상 및 텍스처 분석)
+            processed = vP.preprocessing(frame)
+            
+            # 원본 프레임과 처리된 프레임을 가로로 결합
+            combined_frame = np.hstack((frame, processed))
+            frame = combined_frame
+            
+            # 화재 감지 결과 시각화
+            frame = vP.visualize_fire_detection(frame, detection_result)
 
             img = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             h, w, ch = img.shape
