@@ -22,9 +22,10 @@ from ultralytics import YOLO
 from code.test.LinearProgramming.respondFireConfigure import main as run_optimization
 from code.test.LinearProgramming.respondFireConfigure import generate_scenarios_from_data
 from code.test.LinearProgramming.respondFireConfigure import ResourceAllocator
+from code.test.LinearProgramming.respondFireConfigure import RiskCalculator
+from code.test.LinearProgramming.respondFireConfigure import load_and_preprocess_data_for_scenario
 
 from code.Map.Map import WildfireMap
-from code.Risk.RiskCalculator import RiskCalculator
 from code.Front.key import key
 from code.Front.index_popup import IndexPopup
 
@@ -129,23 +130,23 @@ class FireGuardApp(QMainWindow):
         self.tabs.addTab(self.video_tab, "영상 분석")
 
     def run_fire_optimization_and_show_map(self):
-
         # 데이터 로드 및 전처리
-        features_processed, target_processed = load_and_preprocess_data()
-        if features_processed is None or target_processed is None:
+        df_processed = load_and_preprocess_data_for_scenario('./datasets/WSQ000301.csv')
+        if df_processed is None:
             print("데이터 로드 오류")
             return
 
         # 시나리오 생성
-        scenarios = generate_scenarios_from_data(features_processed, target_processed)
-        print(f"scenarios type: {type(scenarios)}, length: {len(scenarios)}, content: {scenarios}")
+        scenarios = generate_scenarios_from_data(df_processed)
         if not scenarios:
             print("시나리오가 생성되지 않음")
             return
-        allocator = ResourceAllocator()
 
         # 자원 관리 탭의 모든 설정을 반영
         truck_settings, personnel_settings = self.resource_tab.get_all_resource_settings()
+        allocator = ResourceAllocator()
+        
+        # 자원 설정 적용
         for truck_type, qty in truck_settings.items():
             allocator.set_resource_deployment('truck', truck_type, qty)
         for personnel_type, qty in personnel_settings.items():
@@ -154,83 +155,123 @@ class FireGuardApp(QMainWindow):
         # 자원 현황 업데이트
         self.dashboard_tab.update_resource_status()
         
-        for scenario in scenarios:
-            results, cost = allocator.optimize_single_scenario(scenario)
-            if results:
-                # Map.py의 WildfireMap으로 지도 생성
-                map_obj = WildfireMap(
-                    center_lat=scenario.base_station['latitude'],
-                    center_lon=scenario.base_station['longitude'],
-                    zoom=12
-                )
-                map_obj.add_resource_allocations(scenario.base_station, results)
-                
-                # 지도 파일 저장
-                map_path = os.path.abspath(os.path.join(MAP_DIR, f'scenario_{scenario.id}_map.html'))
-                map_obj.show_map(map_path)
-                print(f"지도 파일이 저장되었습니다: {map_path}")
-                
-                # 생성된 지도를 MapTab에 표시
-                self.dashboard_tab.map_widget.load_scenario_map(scenario.id)
-                
-                # 화재 위협 정보 업데이트
-                self.dashboard_tab.fire_count_label.setText(str(len(scenario.sites)))
-                
-                # 위협 목록 업데이트
-                threat_list = []
-                for site_id, site_info in scenario.sites.items():
-                    risk_factors = site_info['risk_factors']
-                    risk_score = self.dashboard_tab.risk_calculator.calculate_risk_score(risk_factors)
-                    risk_level = self.dashboard_tab.risk_calculator.get_risk_level(risk_score)
-                    threat_list.append(f"위치 {site_id}: {risk_level} ({risk_score}%)")
-                
-                self.dashboard_tab.threat_list.setText("\n".join(threat_list))
-                
-                # 위험도 평가 업데이트
-                # 모든 사이트의 평균 위험도 계산
-                avg_risk_factors = {
-                    'wind_speed': sum(site['risk_factors']['wind_speed'] for site in scenario.sites.values()) / len(scenario.sites),
-                    'humidity': sum(site['risk_factors']['humidity'] for site in scenario.sites.values()) / len(scenario.sites),
-                    'fuel_type': max(site['risk_factors']['fuel_type'] for site in scenario.sites.values()),
-                    'slope': sum(site['risk_factors']['slope'] for site in scenario.sites.values()) / len(scenario.sites),
-                    'damage_class': max(site['risk_factors']['damage_class'] for site in scenario.sites.values())
-                }
-                self.dashboard_tab.update_risk_assessment(avg_risk_factors)
-                
-                # 자원 배치 알림 추가
-                timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                deployment_log = f"[{timestamp}] 🔥 화재 대응 자원 배치 완료\n"
-                deployment_log += f"- 배치된 소방차: {sum(1 for r in results if r['resource_type'] == 'truck')}대\n"
-                deployment_log += f"- 배치된 도보 인력: {sum(1 for r in results if r['resource_type'] == 'firefighter')}명\n"
-                deployment_log += f"- 예상 비용: {cost:,.0f}원\n"
-                
-                self.dashboard_tab.alert_text.append(deployment_log)
-                
-                # 기록 탭에 시나리오 정보 추가
-                scenario_log = f"[{timestamp}] 시나리오 {scenario.id} 생성\n"
-                scenario_log += f"- 화재 발생 지점: {len(scenario.sites)}개\n"
-                scenario_log += f"- 평균 위험도: {self.dashboard_tab.risk_calculator.calculate_risk_score(avg_risk_factors)}%\n"
-                scenario_log += f"- 배치된 자원: {len(results)}개\n"
-                scenario_log += f"- 예상 비용: {cost:,.0f}원\n"
-                
-                self.dashboard_tab.fire_logs.append(scenario_log)
-                self.history_tab.log_view.append(scenario_log)
-                
-                # 자원 현황 업데이트
-                self.dashboard_tab.update_resource_status()
-                
-                # 자원 탭의 위치 정보 업데이트
-                self.resource_tab.update_resource_locations(results)
+        # 첫 번째 시나리오 선택
+        scenario_to_display = scenarios[0]
 
-                index = 0
-                print(f"Using index: {index}, type: {type(index)}")  # 인덱스 타입 확인
-                try:
-                    m = Messenger(avg_risk_factors, parent=self)
-                    self.popups.append(m)
-                except TypeError as e:
-                    print(f"TypeError: {e} - Check if index is float or scenarios is not a list")
+        if not scenario_to_display.sites:
+            print(f"선택된 시나리오 {scenario_to_display.id}에 사이트 정보가 없습니다.")
+            # UI 클리어 또는 기본 상태로 설정하는 로직 추가 필요
+            self.dashboard_tab.fire_count_label.setText("0")
+            self.dashboard_tab.threat_list.setText("현재 위협 없음")
+            self.dashboard_tab.update_risk_assessment({}) # 기본값으로 업데이트
+            # 지도 및 알림 등도 초기화 필요
+            return
 
-                break  # 첫 번째 시나리오만 표시
+        # 선택된 시나리오에 대해 최적화 수행
+        results, cost = allocator.optimize_single_scenario(scenario_to_display)
+        
+        # UI 업데이트 (선택된 시나리오의 모든 사이트 정보 사용)
+        
+        # 화재 위협 정보 업데이트 (해당 시나리오의 사이트 수)
+        self.dashboard_tab.fire_count_label.setText(str(len(scenario_to_display.sites)))
+
+        # 위협 목록 업데이트 (해당 시나리오의 모든 사이트 정보 나열)
+        threat_list = []
+        total_risk_score_sum = 0.0
+        risk_factor_sums = {'wind_speed': 0.0, 'humidity': 0.0, 'slope': 0.0}
+        fuel_types = []
+        damage_classes = []
+        num_sites_with_risk_factors = 0
+
+        for site_id, site_info in scenario_to_display.sites.items():
+            risk_factors = site_info['risk_factors']
+            risk_score = self.dashboard_tab.risk_calculator.calculate_risk_score(risk_factors)
+            risk_level = self.dashboard_tab.risk_calculator.get_risk_level(risk_score)
+            threat_list.append(f"위치 {site_id}: {risk_level} ({risk_score}%) - 예상 피해면적 {site_info.get('predicted_damage_area_ha', 0.0):.2f}ha")
+            total_risk_score_sum += risk_score
+
+            # 평균 위험 요인 계산을 위한 데이터 누적
+            try: risk_factor_sums['wind_speed'] += float(risk_factors.get('wind_speed', 0.0))
+            except ValueError: pass
+            try: risk_factor_sums['humidity'] += float(risk_factors.get('humidity', 0.0))
+            except ValueError: pass
+            try: risk_factor_sums['slope'] += float(risk_factors.get('slope', 0.0))
+            except ValueError: pass
+            fuel_types.append(str(risk_factors.get('fuel_type', 'Unknown')))
+            damage_classes.append(str(risk_factors.get('damage_class', 'Unknown')))
+            num_sites_with_risk_factors += 1
+
+        self.dashboard_tab.threat_list.setText("\n".join(threat_list))
+
+        # 위험도 평가 업데이트 (해당 시나리오의 모든 사이트 평균 위험도 반영)
+        avg_risk_score_overall = total_risk_score_sum / len(scenario_to_display.sites) if scenario_to_display.sites else 0.0
+
+        # 평균 위험 요인 계산
+        avg_risk_factors_for_display = {}
+        if num_sites_with_risk_factors > 0:
+            avg_risk_factors_for_display['wind_speed'] = risk_factor_sums['wind_speed'] / num_sites_with_risk_factors
+            avg_risk_factors_for_display['humidity'] = risk_factor_sums['humidity'] / num_sites_with_risk_factors
+            avg_risk_factors_for_display['slope'] = risk_factor_sums['slope'] / num_sites_with_risk_factors
+            # 범주형 변수는 최빈값 또는 가장 위험한 값 등으로 처리 (여기서는 간단히 첫 번째 값 사용)
+            avg_risk_factors_for_display['fuel_type'] = fuel_types[0] if fuel_types else 'Unknown'
+            avg_risk_factors_for_display['damage_class'] = damage_classes[0] if damage_classes else 'Unknown'
+
+        self.dashboard_tab.update_risk_assessment(avg_risk_factors_for_display)
+
+        # 지도 생성 및 표시 (해당 시나리오의 배치 결과 사용)
+        if results:
+            map_obj = WildfireMap(
+                center_lat=scenario_to_display.base_station['latitude'],
+                center_lon=scenario_to_display.base_station['longitude'],
+                zoom=12
+            )
+            map_obj.add_resource_allocations(scenario_to_display.base_station, results)
+
+            # 지도 파일 저장
+            map_path = os.path.abspath(os.path.join(MAP_DIR, f'scenario_{scenario_to_display.id}_map.html'))
+            map_obj.show_map(map_path)
+            print(f"지도 파일이 저장되었습니다: {map_path}")
+
+            # 생성된 지도를 MapTab에 표시
+            self.dashboard_tab.map_widget.load_scenario_map(scenario_to_display.id)
+
+        # 자원 배치 알림 추가
+        if results:
+            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            deployment_log = f"[{timestamp}] 🔥 시나리오 {scenario_to_display.id} 화재 대응 자원 배치 완료\n"
+            deployment_log += f"- 배치된 소방차: {sum(1 for r in results if r['resource_type'] == 'truck')}대\n"
+            deployment_log += f"- 배치된 도보 인력: {sum(1 for r in results if r['resource_type'] == 'firefighter')}명\n"
+            #deployment_log += f"- 예상 비용: {cost:,.0f}원\n"
+
+            self.dashboard_tab.alert_text.append(deployment_log)
+
+            # 기록 탭에 시나리오 정보 추가
+            scenario_log = f"[{timestamp}] 시나리오 {scenario_to_display.id} 생성\n"
+            scenario_log += f"- 화재 발생 지점: {len(scenario_to_display.sites)}개\n"
+            scenario_log += f"- 평균 위험도: {avg_risk_score_overall:.1f}%\n"
+            scenario_log += f"- 배치된 자원: {len(results)}개\n"
+            #scenario_log += f"- 예상 비용: {cost:,.0f}원\n"
+
+            self.dashboard_tab.fire_logs.append(scenario_log)
+            self.history_tab.log_view.append(scenario_log)
+
+            # 자원 탭의 위치 정보 업데이트
+            self.resource_tab.update_resource_locations(results)
+
+            # 위험도 팝업 표시
+            try:
+                # 팝업에는 전체 평균 위험 요인 전달
+                m = Messenger(avg_risk_factors_for_display, parent=self)
+                self.popups.append(m)
+            except Exception as e:
+                print(f"팝업 생성 중 오류 발생: {e}")
+
+
+        # 자원 현황 업데이트
+        self.dashboard_tab.update_resource_status()
+
+        # 루프 종료 (첫 번째 시나리오만 사용)
+        # break # 이미 첫 번째 시나리오만 선택했으므로 break는 불필요
 
 
 class DashboardTab(QWidget):
@@ -506,6 +547,7 @@ class ResourceManagementTab(QWidget):
         super().__init__()
         self.initUI()
         self.load_current_resources()
+        self.loop = None
 
     def initUI(self):
         layout = QVBoxLayout()
@@ -555,35 +597,6 @@ class ResourceManagementTab(QWidget):
         layout.addWidget(self.table)
 
         self.setLayout(layout)
-
-
-    async def get_road_address_from_coords(self, lon, lat):
-        url = "https://nominatim.openstreetmap.org/reverse"
-        params = {
-            "lat": lat,
-            "lon": lon,
-            "format": "json",
-            "zoom": 18,
-            "accept-language": "ko"
-        }
-        headers = {"User-Agent": "AIWRS/Beta1.0 (moongijun967@gmail.com)"}
-        try:
-            async with aiohttp.ClientSession() as session:
-                async with session.get(url, params=params, headers=headers, timeout=5) as response:
-                    if response.status == 200:
-                        data = await response.json()
-                        address = data.get('address', {})
-                        road = address.get('road', '')
-                        suburb = address.get('suburb', '')
-                        city = address.get('city', '')
-                        country = address.get('country', '')
-                        return f"{country} {city} {suburb} {road}" if road else "주소 없음"
-                    else:
-                        return f"API 오류: {response.status}"
-        except Exception as e:
-            return f"오류: {str(e)}"
-
-
 
     def load_current_resources(self):
         """현재 자원 설정을 로드"""
@@ -642,42 +655,94 @@ class ResourceManagementTab(QWidget):
             self.dashboard_tab.update_resource_status()
 
     def update_resource_locations(self, results):
-        """자원 배치 결과에 따라 위치 정보 업데이트 (동기 함수)"""
-        # 이벤트 루프 생성 및 실행
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        loop.run_until_complete(self._async_update_resource_locations(results))
-        loop.close()
+        """자원 배치 결과에 따라 위치 정보 업데이트"""
+        try:
+            # 새로운 이벤트 루프 생성
+            self.loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(self.loop)
+            
+            # 비동기 작업 실행
+            self.loop.run_until_complete(self._async_update_resource_locations(results))
+        except Exception as e:
+            print(f"자원 위치 업데이트 중 오류 발생: {e}")
+        finally:
+            # 이벤트 루프 정리
+            if self.loop:
+                try:
+                    self.loop.close()
+                except Exception as e:
+                    print(f"이벤트 루프 종료 중 오류 발생: {e}")
+                self.loop = None
 
     async def _async_update_resource_locations(self, results):
-        """자원 배치 결과에 따라 위치 정보 업데이트"""
-        # 모든 좌표에 대한 주소 요청 태스크 생성
-        tasks = []
-        for result in results:
-            lon = result['longitude']
-            lat = result['latitude']
-            tasks.append(self.get_road_address_from_coords(lon, lat))
-    
-        # 모든 주소를 병렬로 조회
-        addresses = await asyncio.gather(*tasks)
-    
-        # 테이블 업데이트
-        address_idx = 0
-        for address_idx, result in enumerate(results):
-            for row in range(self.table.rowCount()):
-                resource_name = self.table.item(row, 0).text()
-                # 소방차 처리
-                if f"소방차 {result['type']}" in resource_name:
-                    self.table.setItem(row, 1, QTableWidgetItem(f"배치 완료 ({result['quantity']}대)"))
-                    self.table.setItem(row, 2, QTableWidgetItem(addresses[address_idx]))
-                    address_idx += 1
-                # 인력 처리
-                elif f"인력 {result['type']}" in resource_name:
-                    self.table.setItem(row, 1, QTableWidgetItem(f"배치 완료 ({result['quantity']}명)"))
-                    self.table.setItem(row, 2, QTableWidgetItem(addresses[address_idx]))
-                    address_idx += 1
+        """자원 배치 결과에 따라 위치 정보 업데이트 (비동기)"""
+        try:
+            # 모든 좌표에 대한 주소 요청 태스크 생성
+            tasks = []
+            for result in results:
+                lon = result['longitude']
+                lat = result['latitude']
+                tasks.append(self.get_road_address_from_coords(lon, lat))
+        
+            # 모든 주소를 병렬로 조회
+            addresses = await asyncio.gather(*tasks)
+        
+            # 테이블 업데이트
+            address_idx = 0
+            for result in results:
+                for row in range(self.table.rowCount()):
+                    resource_name = self.table.item(row, 0).text()
+                    # 소방차 처리
+                    if f"소방차 {result['type']}" in resource_name:
+                        self.table.setItem(row, 1, QTableWidgetItem(f"배치 완료 ({result['quantity']}대)"))
+                        self.table.setItem(row, 2, QTableWidgetItem(addresses[address_idx]))
+                        address_idx += 1
+                    # 인력 처리
+                    elif f"인력 {result['type']}" in resource_name:
+                        self.table.setItem(row, 1, QTableWidgetItem(f"배치 완료 ({result['quantity']}명)"))
+                        self.table.setItem(row, 2, QTableWidgetItem(addresses[address_idx]))
+                        address_idx += 1
+        except Exception as e:
+            print(f"비동기 위치 업데이트 중 오류 발생: {e}")
 
+    async def get_road_address_from_coords(self, lon, lat):
+        """좌표로부터 도로 주소를 가져오는 비동기 함수"""
+        url = "https://nominatim.openstreetmap.org/reverse"
+        params = {
+            "lat": lat,
+            "lon": lon,
+            "format": "json",
+            "zoom": 18,
+            "accept-language": "ko"
+        }
+        headers = {"User-Agent": "AIWRS/Beta1.0 (moongijun967@gmail.com)"}
+        
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url, params=params, headers=headers, timeout=5) as response:
+                    if response.status == 200:
+                        data = await response.json()
+                        address = data.get('address', {})
+                        road = address.get('road', '')
+                        suburb = address.get('suburb', '')
+                        city = address.get('city', '')
+                        country = address.get('country', '')
+                        return f"{country} {city} {suburb} {road}" if road else "주소 없음"
+                    else:
+                        return f"API 오류: {response.status}"
+        except Exception as e:
+            print(f"주소 조회 중 오류 발생: {e}")
+            return "주소 조회 실패"
 
+    def closeEvent(self, event):
+        """위젯이 닫힐 때 이벤트 루프 정리"""
+        if self.loop:
+            try:
+                self.loop.close()
+            except Exception as e:
+                print(f"이벤트 루프 종료 중 오류 발생: {e}")
+            self.loop = None
+        super().closeEvent(event)
 
     def connect_dashboard(self, dashboard_tab):
         """대시보드 탭과 연결"""

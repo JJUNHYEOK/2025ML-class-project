@@ -320,7 +320,7 @@ class FireScenario:
         
         if scenario_avg_total_damage_ha <= 1.0: num_sites_val = 1
         elif scenario_avg_total_damage_ha <= 10.0: num_sites_val = random.randint(1, 2)
-        else: num_sites_val = random.randint(1, 2)
+        else: num_sites_val = random.randint(2, 3)
             
         for i_site in range(num_sites_val):
             site_id_val = f'site{i_site+1}'
@@ -449,6 +449,42 @@ class ResourceAllocator:
         }
         self.MAX_TRUCKS_PER_TYPE_TOTAL = 2 # 각 트럭 타입별 실제 보유 대수
         self.MAX_FF_TOTAL_DEPLOYABLE = 40 # 전체 시나리오에서 동원 가능한 추가 소방관 총원 한계
+        
+        # 자원 배치 현황을 저장할 딕셔너리 추가
+        self.deployed_resources = {
+            'truck': {truck_type: 0 for truck_type in self.truck_types},
+            'firefighter': {ff_type: 0 for ff_type in self.firefighter_types}
+        }
+
+    def set_resource_deployment(self, resource_type: str, resource_id: str, quantity: int):
+        """자원 배치 수량을 설정하는 메서드"""
+        if resource_type not in ['truck', 'firefighter']:
+            raise ValueError(f"잘못된 자원 타입: {resource_type}")
+        
+        if resource_type == 'truck' and resource_id not in self.truck_types:
+            raise ValueError(f"잘못된 트럭 타입: {resource_id}")
+        elif resource_type == 'firefighter' and resource_id not in self.firefighter_types:
+            raise ValueError(f"잘못된 소방관 타입: {resource_id}")
+        
+        if quantity < 0:
+            raise ValueError(f"배치 수량은 0 이상이어야 합니다: {quantity}")
+        
+        if resource_type == 'truck' and quantity > self.MAX_TRUCKS_PER_TYPE_TOTAL:
+            quantity = self.MAX_TRUCKS_PER_TYPE_TOTAL
+        elif resource_type == 'firefighter' and quantity > self.firefighter_capabilities[resource_id]['max_deployments']:
+            quantity = self.firefighter_capabilities[resource_id]['max_deployments']
+        
+        self.deployed_resources[resource_type][resource_id] = quantity
+
+    def get_available_resources(self, resource_type: str, resource_id: str) -> int:
+        """현재 가용 가능한 자원 수량을 반환하는 메서드"""
+        if resource_type not in ['truck', 'firefighter']:
+            raise ValueError(f"잘못된 자원 타입: {resource_type}")
+        
+        if resource_type == 'truck':
+            return self.MAX_TRUCKS_PER_TYPE_TOTAL - self.deployed_resources[resource_type][resource_id]
+        else:
+            return self.firefighter_capabilities[resource_id]['max_deployments'] - self.deployed_resources[resource_type][resource_id]
 
     def optimize_single_scenario(self, scenario: FireScenario) -> Tuple[List[Dict], float]:
         available_trucks_scen = {
@@ -588,8 +624,7 @@ class RiskCalculator:
             if str(risk_factors_input.get('damage_class','Unknown')) in ['2.0','3.0']: desc.append("큰나무")
         except: pass
         return desc
-
-
+    
 # --- 6. 메인 실행 함수 ---
 def main():
     print("화재 대응 자원 배치 최적화 시스템 시작")
