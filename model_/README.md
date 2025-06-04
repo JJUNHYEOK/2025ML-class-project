@@ -78,8 +78,6 @@ YOLOv8을 기반으로 산불(화재) + 연기 이미지를 감지하는 모델�
 
 ![predict dataset으로 예측한 결과](pic/hyp_fix/val_batch0_pred.jpg)
 
-![label dataset의 실제 결과](pic/hyp_fix/val_batch0_labels.jpg)
-
 
 ---
 
