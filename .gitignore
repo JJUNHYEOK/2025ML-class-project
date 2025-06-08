@@ -3,3 +3,4 @@ datasets/WSQ000301.csv
 code/Front/key.py
 datasets/ics209plus-wildfire/ics209plus-wildfire/ics209-plus-wf_sitreps_1999to2020.csv
 code/test/LinearProgramming/model/*
+visual.ipynb
