@@ -387,20 +387,15 @@ class FireScenario:
                     pred_potfr = np.expm1(log_pred_potfr[0])
                     predicted_demand_gbrt_raw_val = max(1, int(round(pred_potfr)))
                     
-                    current_site_area_cap = site_features_dict_for_gbrt.get('FRFR_DMG_AREA', 1.0)
-                    if current_site_area_cap <= 1.0: MAX_DEMAND_SITE = random.randint(10, 20)
-                    elif current_site_area_cap <= 5.0: MAX_DEMAND_SITE = random.randint(15, 30)
-                    else: MAX_DEMAND_SITE = random.randint(25, 40)
-                    
-                    predicted_demand_gbrt_final_val = min(predicted_demand_gbrt_raw_val, MAX_DEMAND_SITE)
+                    predicted_demand_gbrt_final_val = predicted_demand_gbrt_raw_val # min(predicted_demand_gbrt_raw_val, MAX_DEMAND_SITE)
                     predicted_demand_gbrt_final_val = max(5, predicted_demand_gbrt_final_val)
                 except Exception as e_gbrt_site_pred:
                     print(f"Scenario {self.id}, Site {site_id_val} GBRT 수요 예측 중 오류: {e_gbrt_site_pred}")
                     predicted_demand_gbrt_final_val = max(5, int(self.cluster_stats.get('required_resources_cluster_avg', 5)))
-                    predicted_demand_gbrt_final_val = min(predicted_demand_gbrt_final_val, 40)
+                    # predicted_demand_gbrt_final_val = min(predicted_demand_gbrt_final_val, 40)
             else:
                 predicted_demand_gbrt_final_val = max(5, int(self.cluster_stats.get('required_resources_cluster_avg', 5)))
-                predicted_demand_gbrt_final_val = min(predicted_demand_gbrt_final_val, 40)
+                # predicted_demand_gbrt_final_val = min(predicted_demand_gbrt_final_val, 40)
 
             print(f"Scenario {self.id}, Site {site_id_val}: 면적={site_damage_area_ha_val:.2f}ha, "
                   f"GBRT예측(Raw)={predicted_demand_gbrt_raw_val}, 최종수요(capped)={predicted_demand_gbrt_final_val}")
@@ -429,7 +424,7 @@ class FireScenario:
             }
         return sites
 
-# --- 4. ResourceAllocator 클래스 개선 (이전과 유사, 상수값 현실화) ---
+# --- 4. ResourceAllocator 클래스 개선 ---
 class ResourceAllocator:
     def __init__(self):
         self.truck_types = ['FT1', 'FT2', 'FT3', 'FT4', 'FT5', 'FT6']
@@ -444,11 +439,11 @@ class ResourceAllocator:
             'FT6': {'capacity': 800, 'personnel': 2, 'fuel_efficiency': 5, 'speed': 45, 'cost': 200}     # 산악용소형
         }
         self.firefighter_capabilities = { # 타입별로 다른 능력치나 비용 설정 가능
-            'FF_TypeA': {'max_deployments': 20, 'cost': 10}, # 예: 정규 소방관
-            'FF_TypeB': {'max_deployments': 30, 'cost': 5}   # 예: 지원 인력 (의용소방대 등)
+            'FF_TypeA': {'max_deployments': 200, 'cost': 10}, # 예: 정규 소방관
+            'FF_TypeB': {'max_deployments': 200, 'cost': 5}   # 예: 지원 인력 (의용소방대 등)
         }
-        self.MAX_TRUCKS_PER_TYPE_TOTAL = 2 # 각 트럭 타입별 실제 보유 대수
-        self.MAX_FF_TOTAL_DEPLOYABLE = 40 # 전체 시나리오에서 동원 가능한 추가 소방관 총원 한계
+        self.MAX_TRUCKS_PER_TYPE_TOTAL = 30 # 각 트럭 타입별 실제 보유 대수
+        self.MAX_FF_TOTAL_DEPLOYABLE = 400 # 전체 시나리오에서 동원 가능한 추가 소방관 총원 한계
         
         # 자원 배치 현황을 저장할 딕셔너리 추가
         self.deployed_resources = {
@@ -533,11 +528,11 @@ class ResourceAllocator:
             model += pulp.lpSum(self.truck_capabilities[i]['personnel'] * x_truck[(i,n)] for i in self.truck_types) + \
                      pulp.lpSum(y_ff[(j,n)] for j in self.firefighter_types) >= scenario.sites[n]['demand'], f"DemandMet_{n}"
 
-        for n in scenario.sites.keys(): # 6. 추가 소방관 <= 트럭 탑승인원
-            model += pulp.lpSum(y_ff[(j,n)] for j in self.firefighter_types) <= \
-                     pulp.lpSum(self.truck_capabilities[i]['personnel'] * x_truck[(i,n)] for i in self.truck_types), f"FF_TruckRatio_{n}"
+        # for n in scenario.sites.keys(): # 6. 추가 소방관 <= 트럭 탑승인원
+        #     model += pulp.lpSum(y_ff[(j,n)] for j in self.firefighter_types) <= \
+        #              pulp.lpSum(self.truck_capabilities[i]['personnel'] * x_truck[(i,n)] for i in self.truck_types), f"FF_TruckRatio_{n}"
         
-        MAX_TRAVEL_TIME_LP = 3.0 
+        MAX_TRAVEL_TIME_LP = 1.0 
         for i in self.truck_types: # 7. 이동 시간 제약
             for n in scenario.sites.keys():
                 if self.truck_capabilities[i]['speed'] > 0:
