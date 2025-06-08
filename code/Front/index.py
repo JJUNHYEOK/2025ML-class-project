@@ -81,14 +81,15 @@ def find_qtwebengine_process():
     return None
 
 class Messenger:
-    def __init__(self, scenario, parent=None):
+    def __init__(self, scenario, result, parent=None):
         self.scenario = scenario
+        self.result = result
         self.parent = parent  # 부모 윈도우 저장
         self.popup = None    # 팝업 객체 초기화
         self.show_popup()
 
     def show_popup(self):
-        self.popup = IndexPopup(self.scenario, parent=self.parent)
+        self.popup = IndexPopup(self.scenario, self.result, parent=self.parent)
         self.popup.show()  # 비모달로 표시
 
 class FireGuardApp(QMainWindow):
@@ -99,6 +100,8 @@ class FireGuardApp(QMainWindow):
         self.setWindowIcon(QIcon('code\Front\icon.png'))
         self.popups = []
         self.initUI()
+        self.video_tab.FIRE_SIGNAL.connect(self.handle_fire_signal)
+        self.video_tab.CONF_SIGNAL.connect(self.run_fire_optimization_and_show_map)
 
     def initUI(self):
         # WebEngine 설정 초기화
@@ -128,6 +131,15 @@ class FireGuardApp(QMainWindow):
         self.tabs.addTab(self.resource_tab, "자원 관리")
         self.tabs.addTab(self.history_tab, "기록 조회")
         self.tabs.addTab(self.video_tab, "영상 분석")
+
+    def handle_fire_signal(self, confidence, frame):
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        alert_message = f"[{timestamp}] 주의: 산불 감지! (신뢰도: {confidence:.2f})"
+        
+        # DashboardTab의 알림창에 텍스트 추가
+        self.dashboard_tab.alert_text.append(alert_message)
+        
+        #self.enhance_and_run_simulation()
 
     def run_fire_optimization_and_show_map(self):
         # 데이터 로드 및 전처리
@@ -261,7 +273,7 @@ class FireGuardApp(QMainWindow):
             # 위험도 팝업 표시
             try:
                 # 팝업에는 전체 평균 위험 요인 전달
-                m = Messenger(avg_risk_factors_for_display, parent=self)
+                m = Messenger(avg_risk_factors_for_display, parent=self, result=results)
                 self.popups.append(m)
             except Exception as e:
                 print(f"팝업 생성 중 오류 발생: {e}")
@@ -834,11 +846,22 @@ class HistoryTab(QWidget):
 
 import cv2
 import code.videoProcess.videoProcess as vP
+from PyQt5.QtCore import pyqtSignal
+import time
+
 class VideoTab(QWidget):
+    # confidence 값과 감지된 프레임을 전달 신호 (클래스 변수)
+    FIRE_SIGNAL = pyqtSignal(float, np.ndarray)
+    CONF_SIGNAL = pyqtSignal()
+
     def __init__(self, status_bar=None):
         super().__init__()
         self.status_bar = status_bar
+        self.video_thread = None
         self.layout = QVBoxLayout()
+
+        self.is_analyzing = False
+        self.fire_detected_time = None
 
         self.video_player = QLabel(parent=self)
 
@@ -860,6 +883,9 @@ class VideoTab(QWidget):
         self.layout.addLayout(btn_layout_v)
         self.setLayout(self.layout)
 
+    def stop_analysis(self):
+        self.is_analyzing = False
+
     def analyze_video(self):
         fname, _ = QFileDialog.getOpenFileName(self, "Open Video", "", "Video Files (*.mp4 *.avi)")
         if not fname:
@@ -867,6 +893,9 @@ class VideoTab(QWidget):
             return
         
         self.cap = cv2.VideoCapture(fname)
+        self.is_analyzing = True
+        self.fire_detected_time = None # 타이머 초기화
+        self.is_fire_in_frame = False
 
         width = self.cap.get(cv2.CAP_PROP_FRAME_WIDTH)
         height = self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
@@ -876,20 +905,45 @@ class VideoTab(QWidget):
             self.status_bar.showMessage("영상 파일 읽기 실패")
             return
         
-        while True:
+        while self.is_analyzing:
             ret, frame = self.cap.read()
             if not ret:
                 break
 
-            # YOLO 모델로 화재 감지 수행
-            detection_result = fire_model(frame)
-
             # 전처리 수행 (화재 색상 및 텍스처 분석)
             processed = vP.preprocessing(frame)
+
+            # YOLO 모델로 화재 감지 수행
+            detection_result = fire_model(frame)
+            self.is_fire_in_frame = False
+
+            for result in detection_result:
+                boxes = result.boxes
+                for box in boxes:
+                    if box.conf[0] > 0.23:
+                        self.FIRE_SIGNAL.emit(box.conf, frame)
+                        self.is_fire_in_frame = True
+                        break
+                break
+
+            if self.is_fire_in_frame:
+                if self.fire_detected_time is None:
+                    # 화재가 처음 감지되면 시간 기록
+                    self.fire_detected_time = time.time()
+                
+                # 3초 이상 감지가 지속되었는지 확인
+                elif time.time() - self.fire_detected_time > 3:
+                    print("화재 발생 확정. 영상 분석을 종료하고 시뮬레이션을 시작합니다.")
+                    self.is_analyzing = False  # <--- 루프 종료 플래그
+                    self.CONF_SIGNAL.emit() # <--- 메인 윈도우에 신호 전송
+            else:
+                # 화재가 감지되지 않으면 타이머 리셋
+                self.fire_detected_time = None
             
             # 원본 프레임과 처리된 프레임을 가로로 결합
             combined_frame = np.hstack((frame, processed))
             frame = combined_frame
+            
             
             # 화재 감지 결과 시각화
             frame = vP.visualize_fire_detection(frame, detection_result)

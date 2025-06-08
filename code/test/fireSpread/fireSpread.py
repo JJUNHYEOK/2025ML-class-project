@@ -17,7 +17,7 @@ class FireCell:
 class FireSpreadSimulator:
     def __init__(self, grid_size=100, resolution=30, burn_time=3, 
                  wind_speed=2.0, wind_direction=(0,1), fuel_moisture=0.1,
-                 slope=0, ignition_points=[(50,50)]):
+                 slope=0, ignition_points=[(50,50)], fuel_grid=None):
         
         # 시뮬레이션 파라미터
         self.grid_size = grid_size    # 격자 크기 (N x N)
@@ -32,11 +32,16 @@ class FireSpreadSimulator:
         
         # 초기화재 위치 설정
         self.ignition_points = ignition_points
-        
-        # 격자 초기화
-        self.grid = [[FireCell(1, fuel_moisture) for _ in range(grid_size)] 
-                    for _ in range(grid_size)]
         self.time_step = 0
+
+        # 격자 초기화: fuel_grid가 있으면 사용, 없으면 기존 방식대로
+        if fuel_grid is not None:
+            self.grid = [[FireCell(fuel_grid[i][j], fuel_moisture) for j in range(grid_size)] 
+                        for i in range(grid_size)]
+        else:
+            # 기존 코드 (균일한 연료)
+            self.grid = [[FireCell(1, fuel_moisture) for _ in range(grid_size)] 
+                        for _ in range(grid_size)]
         
         # 초기 점화
         for x, y in ignition_points:
@@ -61,6 +66,14 @@ class FireSpreadSimulator:
         # 기본 확률 + 풍향 영향
         base_prob = 0.3 + 0.2 * wind_effect
         final_prob = base_prob * moisture_effect * slope_effect
+
+                # 목표 셀의 연료 타입 확인
+        to_cell_i, to_cell_j = to_cell
+        target_fuel_type = self.grid[to_cell_i][to_cell_j].fuel_type
+        fuel_effect = 1.0 + (target_fuel_type * 0.1) #가중치 조절해봐야함
+
+        base_prob = 0.3 + 0.2 * wind_effect
+        final_prob = base_prob * moisture_effect * slope_effect * fuel_effect
         
         return np.clip(final_prob, 0, 1)
 
