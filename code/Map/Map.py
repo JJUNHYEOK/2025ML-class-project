@@ -113,7 +113,7 @@ class WildfireMap:
                 <b>자원 정보</b><br>
                 유형: {resource['resource_type']}<br>
                 종류: {resource['type']}<br>
-                수량: {resource['quantity']}대<br>
+                수량: {resource['quantity']}<br>
                 위치: ({resource['latitude']:.6f}, {resource['longitude']:.6f})<br>
                 거리: {resource['distance']:.1f}km<br>
                 화재 위험도 순위: {resources.index(resource)}

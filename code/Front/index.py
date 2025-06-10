@@ -251,8 +251,8 @@ class FireGuardApp(QMainWindow):
         if results:
             timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             deployment_log = f"[{timestamp}] 🔥 시나리오 {scenario_to_display.id} 화재 대응 자원 배치 완료\n"
-            deployment_log += f"- 배치된 소방차: {sum(1 for r in results if r['resource_type'] == 'truck')}대\n"
-            deployment_log += f"- 배치된 도보 인력: {sum(1 for r in results if r['resource_type'] == 'firefighter')}명\n"
+            deployment_log += f"- 배치된 소방차: {sum(1 for r in results if r['resource_type'] == 'truck')}그룹\n"
+            deployment_log += f"- 배치된 도보 인력: {sum(1 for r in results if r['resource_type'] == 'firefighter')}그룹\n"
             #deployment_log += f"- 예상 비용: {cost:,.0f}원\n"
 
             self.dashboard_tab.alert_text.append(deployment_log)
